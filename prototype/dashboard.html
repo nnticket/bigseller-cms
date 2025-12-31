@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>賣家中心 | 儀表板</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        .stat-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">BigSeller 賣家控制台</div>
+            <nav class="nav">
+                <a href="dashboard.html" class="active">儀表板</a>
+                <a href="listing.html">新增票券</a>
+                <a href="orders.html">訂單管理</a>
+                <a href="settings.html">賣家設定</a>
+            </nav>
+        </header>
+
+        <main>
+            <div style="margin-bottom: 2rem;">
+                <h1>總覽 Overview</h1>
+                <p style="color:var(--text-muted)">歡迎回來，<strong style="color:white">TicketMasterTW 台灣票務大王</strong>。
+                    這是您今天的銷售概況。</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="glass-card stat-card">
+                    <div>
+                        <div style="color:var(--text-muted); font-size:0.9rem">總營收 (Total Revenue)</div>
+                        <div style="font-size:2rem; font-weight:700; margin-top:0.5rem" id="statRevenue">$0</div>
+                        <div style="color:#22c55e; font-size:0.8rem; margin-top:0.25rem">▲ 12% 較上週成長</div>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(99, 102, 241, 0.1); color:var(--primary)">💰</div>
+                </div>
+
+                <div class="glass-card stat-card">
+                    <div>
+                        <div style="color:var(--text-muted); font-size:0.9rem">待處理訂單</div>
+                        <div style="font-size:2rem; font-weight:700; margin-top:0.5rem" id="statOrders">0</div>
+                        <div style="color:var(--text-muted); font-size:0.8rem; margin-top:0.25rem">需要您的關注</div>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(236, 72, 153, 0.1); color:var(--accent)">📦</div>
+                </div>
+
+                <div class="glass-card stat-card">
+                    <div>
+                        <div style="color:var(--text-muted); font-size:0.9rem">上架中票券</div>
+                        <div style="font-size:2rem; font-weight:700; margin-top:0.5rem" id="statListings">0</div>
+                        <div style="color:var(--text-muted); font-size:0.8rem; margin-top:0.25rem">分佈於 3 個活動</div>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(234, 179, 8, 0.1); color:#eab308">🎫</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+
+                <!-- Recent Sales -->
+                <div class="glass-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem">
+                        <h3>近期銷售 Recent Sales</h3>
+                        <a href="orders.html" class="btn-outline"
+                            style="font-size:0.8rem; padding:4px 8px; text-decoration:none">查看全部</a>
+                    </div>
+
+                    <table class="orders-table" style="font-size:0.9rem">
+                        <thead>
+                            <tr>
+                                <th>訂單編號</th>
+                                <th>商品內容</th>
+                                <th>總金額</th>
+                                <th>狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardOrderList">
+                            <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Quick Actions / Alerts -->
+                <div style="display:flex; flex-direction:column; gap:1.5rem">
+                    <div class="glass-card"
+                        style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.1))">
+                        <h3 style="margin-bottom:0.5rem">🚀 快速上架 Quick List</h3>
+                        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem">
+                            拿到新的票源了嗎？使用批次工具快速上架。
+                        </p>
+                        <a href="listing.html" class="btn btn-primary"
+                            style="display:inline-block; text-decoration:none; text-align:center; width:100%; box-sizing:border-box">
+                            建立新賣場
+                        </a>
+                    </div>
+
+                    <div class="glass-card">
+                        <h3>庫存警示 Inventory Alerts</h3>
+                        <div
+                            style="margin-top:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.05)">
+                            <div style="font-weight:600; font-size:0.9rem; color:#ef4444">低庫存: 周杰倫 (特區 Rock A)
+                            </div>
+                            <div style="font-size:0.8rem; color:var(--text-muted)">
+                                該批次僅剩 4 張票券。
+                            </div>
+                        </div>
+                        <div style="margin-top:1rem">
+                            <div style="font-weight:600; font-size:0.9rem; color:#eab308">價格競爭: Bruno Mars</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted)">競爭者 B 將價格降至 $3500。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Inline init for dashboard specific stuff
+        document.addEventListener('DOMContentLoaded', () => {
+            initDashboard();
+        });
+    </script>
+</body>
+
+</html>

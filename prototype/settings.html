@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigSeller | 賣家設定</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .app-header {
+            height: 60px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-radius: 6px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .bg-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            padding: 0.75rem;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .bg-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .sub-account-row {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .sub-account-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="text-xl font-bold tracking-tight mr-10">BigSeller <span class="text-indigo-500">Pro</span></div>
+        <nav class="flex gap-2">
+            <a href="dashboard.html" class="nav-link">儀表板</a>
+            <a href="listing.html" class="nav-link">門票刊登</a>
+            <a href="orders.html" class="nav-link">訂單管理</a>
+            <a href="settings.html" class="nav-link active">賣家設定</a>
+        </nav>
+        <div class="ml-auto flex items-center gap-4">
+            <div class="text-sm text-gray-400">已登入: TicketMasterTW</div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Left Col: Payment Info -->
+        <div class="glass-panel">
+            <h2 class="section-title">
+                <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                </svg>
+                收款資訊 (Payment Info)
+            </h2>
+            <p class="text-gray-400 text-sm mb-6">請填寫您接收款項的銀行帳戶資訊。我們會定期將銷售收益匯入此帳戶。</p>
+
+            <form id="paymentForm" onsubmit="savePaymentInfo(event)" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label>銀行代碼 (Bank Code)</label>
+                        <input type="text" id="bankCode" class="bg-input" placeholder="例如: 822" value="822">
+                    </div>
+                    <div class="input-group">
+                        <label>銀行名稱 (Bank Name)</label>
+                        <input type="text" id="bankName" class="bg-input" placeholder="例如: 中國信託" value="中國信託商業銀行">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>分行名稱 (Branch Name)</label>
+                    <input type="text" id="branchName" class="bg-input" placeholder="例如: 營業部" value="城東分行">
+                </div>
+
+                <div class="input-group">
+                    <label>戶名 (Account Name)</label>
+                    <input type="text" id="accountName" class="bg-input" placeholder="需與銀行帳戶一致" value="台灣票務大王有限公司">
+                </div>
+
+                <div class="input-group">
+                    <label>銀行帳號 (Account Number)</label>
+                    <input type="text" id="accountNumber" class="bg-input font-mono" placeholder="請輸入帳號"
+                        value="1234-5678-9012">
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="btn-primary w-full">儲存收款資訊 (Save)</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Col: Sub-accounts -->
+        <div class="glass-panel">
+            <h2 class="section-title">
+                <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                    </path>
+                </svg>
+                小賣家管理 (Sub-accounts)
+            </h2>
+            <p class="text-gray-400 text-sm mb-6">您可以建立子帳號供員工協助上架或管理訂單。</p>
+
+            <div class="mb-4 flex justify-end">
+                <button onclick="openAddUserModal()" class="btn-outline text-sm flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    新增成員
+                </button>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg border border-gray-700">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-gray-800 text-gray-400">
+                            <th class="p-3">帳號 (Username)</th>
+                            <th class="p-3">狀態 (Status)</th>
+                            <th class="p-3 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subAccountList">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal for Add User -->
+    <div id="userModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div
+            class="bg-[#1e293b] p-6 rounded-xl border border-gray-700 w-full max-w-sm shadow-2xl transform scale-100 transition-all">
+            <h3 class="text-xl font-bold text-white mb-4">新增小賣家</h3>
+            <form onsubmit="addSubAccount(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">帳號 (Username)</label>
+                    <input type="text" id="newUsername" class="bg-input" required>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">密碼 (Password)</label>
+                    <input type="password" id="newPassword" class="bg-input" required>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeUserModal()"
+                        class="flex-1 btn-outline justify-center">取消</button>
+                    <button type="submit" class="flex-1 btn-primary justify-center">建立</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/utils.js?v=5"></script>
+    <script src="js/app.js?v=5"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSubAccounts();
+        });
+
+        function savePaymentInfo(e) {
+            e.preventDefault();
+            // In a real app, send to API
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+
+            btn.textContent = "儲存中...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                alert("收款資訊已更新！");
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 800);
+        }
+
+        function renderSubAccounts() {
+            const list = document.getElementById('subAccountList');
+            const users = window.db.getSubAccounts();
+
+            if (users.length === 0) {
+                list.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">尚無子帳號</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = users.map(u => {
+                const isActive = u.status === 'active';
+                const statusColor = isActive ? 'text-green-400 bg-green-500/20' : 'text-gray-400 bg-gray-500/20';
+                const statusText = isActive ? '啟用' : '停用';
+                const toggleBtnText = isActive ? '停用' : '啟用';
+                const toggleBtnColor = isActive ? 'text-yellow-400 hover:text-yellow-300' : 'text-green-400 hover:text-green-300';
+
+                return `
+                <tr class="sub-account-row">
+                    <td class="p-3 font-medium">${u.username}</td>
+                    <td class="p-3"><span class="status-badge ${statusColor}">${statusText}</span></td>
+                    <td class="p-3 text-right space-x-2">
+                        <button class="text-sm ${toggleBtnColor} transition-colors" onclick="toggleStatus(${u.id})">${toggleBtnText}</button>
+                        <span class="text-gray-600">|</span>
+                        <button class="text-sm text-red-400 hover:text-red-300 transition-colors" onclick="deleteUser(${u.id})">刪除</button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function openAddUserModal() {
+            document.getElementById('userModal').style.display = 'flex';
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+
+        function addSubAccount(e) {
+            e.preventDefault();
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+
+            if (!username || !password) return;
+
+            window.db.addSubAccount({ username, password });
+            closeUserModal();
+            renderSubAccounts();
+
+            // Clear
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+        }
+
+        function toggleStatus(id) {
+            window.db.toggleSubAccountStatus(id);
+            renderSubAccounts();
+        }
+
+        function deleteUser(id) {
+            if (confirm("確定要刪除此子帳號嗎？")) {
+                window.db.deleteSubAccount(id);
+                renderSubAccounts();
+            }
+        }
+    </script>
+</body>
+
+</html>

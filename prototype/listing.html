@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigSeller | 門票刊登</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            /* Classic Palette */
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --border: rgba(255, 255, 255, 0.08);
+            /* Subtle border */
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Global Scrollbar --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* --- Header --- */
+        .app-header {
+            height: 60px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+
+        /* --- Main Layout: 2 Columns --- */
+        .main-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            /* Fixed sidebar width */
+            overflow: hidden;
+        }
+
+        /* --- Sidebar: Text Only List --- */
+        .sidebar {
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-area {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.6rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        .event-tree {
+            flex: 1;
+            /* Critical for scrolling */
+            min-height: 0;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        /* Tree Items */
+        .group-details {
+            margin-bottom: 2px;
+        }
+
+        .tree-group-header {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            cursor: pointer;
+            list-style: none;
+            /* Hide default triangle */
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tree-group-header:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Custom Triangle */
+        .tree-group-header::-webkit-details-marker {
+            display: none;
+        }
+
+        .tree-group-header::after {
+            content: '›';
+            font-size: 1.2rem;
+            line-height: 1;
+            color: #64748b;
+            margin-left: auto;
+            transform: rotate(90deg);
+            transition: transform 0.2s;
+        }
+
+        details[open] .tree-group-header::after {
+            transform: rotate(-90deg);
+        }
+
+        .group-content {
+            padding-left: 0.5rem;
+            margin-top: 2px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            margin-left: 0.5rem;
+        }
+
+        .tree-item {
+            padding: 0.6rem 0.8rem;
+            margin: 1px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+
+
+        .tree-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: white;
+        }
+
+        .tree-item.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .tree-venue {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+
+        /* Integrated Right Panel */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-dark);
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top: Zone Selector (Grid View) */
+        .area-section {
+            width: 100%;
+            flex-shrink: 0;
+            background: #182030;
+            border-bottom: none;
+            padding: 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 20;
+        }
+
+        /* Horizontal Scrollable Grid */
+        .area-grid-wrapper {
+            width: 100%;
+            display: block;
+            /* Ensure it takes space */
+            margin-top: 0.5rem;
+        }
+
+        .area-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            /* Slightly smaller min-width to fit more */
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .area-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60px;
+            /* Ensure visual height */
+        }
+
+        .area-card:hover {
+            border-color: var(--primary);
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-1px);
+        }
+
+        .area-card.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Inspector Form Grid (2 Columns) */
+        .inspector-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* Split 50/50 */
+            gap: 2rem;
+            align-items: start;
+        }
+
+        /* On smaller screens, stack them */
+        @media (max-width: 1024px) {
+            .inspector-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        /* Bottom: Inspector Form */
+        .inspector-section {
+            flex: 1;
+            background: #182030;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            /* Fix: Ensure content stretches, don't center */
+            justify-content: flex-start;
+            /* Fix: Start from top */
+        }
+
+        .inspector-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            /* Force Vertical Stack */
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .field-group-title {
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .field-group-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            opacity: 0.5;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .classic-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .classic-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            outline: none;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .classic-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Submit Button */
+        .btn-submit-container {
+            position: sticky;
+            bottom: 0;
+            background: #182030;
+            padding: 1rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+            z-index: 10;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Toggle & Checkbox */
+        .pill-toggle {
+            display: inline-flex;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        .pill-toggle label {
+            padding: 0.5rem 1.2rem;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            margin: 0 !important;
+        }
+
+        .pill-toggle input:checked+span {
+            background: var(--panel-bg);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .consecutive-box {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .consecutive-box:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="text-xl font-bold tracking-tight mr-10">BigSeller</div>
+        <nav class="flex gap-2">
+            <a href="dashboard.html" class="nav-link">儀表板</a>
+            <a href="listing.html" class="nav-link active">門票刊登</a>
+            <a href="orders.html" class="nav-link">訂單管理</a>
+            <a href="settings.html" class="nav-link">賣家設定</a>
+        </nav>
+        <div class="ml-auto flex items-center gap-4">
+            <div class="text-sm text-gray-400">已登入: TicketMasterTW</div>
+        </div>
+    </header>
+
+    <div class="main-container">
+
+        <!-- Sidebar (Text Only) -->
+        <aside class="sidebar">
+            <div class="search-area">
+                <input type="text" id="eventSearch" class="search-input" placeholder="搜尋活動 (周杰倫)..."
+                    oninput="filterSidebar()">
+            </div>
+            <div id="eventTree" class="event-tree custom-scroll">
+                <!-- Injected JS -->
+            </div>
+        </aside>
+
+        <!-- Right Panel -->
+        <main class="right-panel">
+
+            <div id="emptyState" class="empty-placeholder">
+                <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122">
+                        </path>
+                    </svg>
+                </div>
+                <div>請選擇左側活動場次</div>
+            </div>
+
+            <!-- Integrated Content Wrapper -->
+            <div id="contentWrapper" style="display:none; flex-direction:column; height:100%;">
+
+                <!-- Scrollable Form Area -->
+                <div class="inspector-section" style="background:transparent;">
+                    <div class="inspector-scroll">
+
+                        <!-- Global Header (Now Part of Scroll Flow) -->
+                        <!-- Global Header (Now Part of Scroll Flow) -->
+                        <div class="section-header"
+                            style="background:transparent; z-index:30; padding-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:1.5rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="padding-right: 1rem;">
+                                    <h1 class="header-title" id="headerTitle"
+                                        style="font-size:1.5rem; line-height:1.2;">Event Title</h1>
+                                    <div class="header-meta mt-1 flex items-center gap-2">
+                                        <span id="headerTime"
+                                            class="bg-gray-800 px-2 py-0.5 rounded text-gray-300 text-xs">Time</span>
+                                        <span class="text-gray-600">|</span>
+                                        <span id="headerVenue" class="text-gray-400 text-xs">Venue</span>
+                                    </div>
+                                </div>
+                                <div style="text-align:right; flex-shrink:0;">
+                                    <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">Average
+                                        Price</div>
+                                    <span id="mktPrice"
+                                        style="font-size:1.5rem; font-family:monospace; color:white; font-weight:700;">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onsubmit="submitListing(event)">
+
+                            <!-- Group 1: Zone Selection (Integrated) -->
+                            <div class="field-group">
+                                <div class="field-group-title">
+                                    <span>選擇區域 (Select Zone)</span>
+                                    <span id="targetAreaName"
+                                        class="ml-auto text-indigo-400 font-normal normal-case text-sm">--</span>
+                                </div>
+                                <div class="area-grid-wrapper" style="margin-top:0.5rem;">
+                                    <div id="areaGrid" class="area-grid">
+                                        <!-- JS Injects Grid Cards Here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2-Column Layout for Input Fields -->
+                            <div class="inspector-grid">
+
+                                <!-- LEFT COLUMN: Seat Info -->
+                                <div>
+                                    <div class="field-group h-full">
+                                        <div class="field-group-title">座位資訊 (Seat Info)</div>
+
+                                        <!-- Consecutive Toggle -->
+                                        <label class="consecutive-box mb-6">
+                                            <div class="flex flex-col">
+                                                <span class="font-bold text-white text-lg">連號座位 (Consecutive)</span>
+                                                <span class="text-sm text-indigo-300 mt-1">啟用後只需填寫第一個座號，系統自動計算</span>
+                                            </div>
+                                            <input type="checkbox" id="consecutiveCheck" checked
+                                                class="w-6 h-6 accent-indigo-500 rounded cursor-pointer"
+                                                onchange="toggleC()">
+                                        </label>
+
+                                        <div class="form-grid">
+                                            <div class="col-span-3">
+                                                <div class="input-group">
+                                                    <label>排 (Row)</label>
+                                                    <input type="text" id="rowInp"
+                                                        class="classic-input text-center font-mono font-bold"
+                                                        placeholder="eg. 5">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-5">
+                                                <div class="input-group">
+                                                    <label id="seatLabel">起始座號 (Start Seat)</label>
+                                                    <input type="text" id="seatInp" class="classic-input font-mono"
+                                                        placeholder="eg. 1" oninput="autoQty()">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-4">
+                                                <div class="input-group">
+                                                    <label>數量 (Qty)</label>
+                                                    <input type="number" id="qtyInp"
+                                                        class="classic-input text-center font-bold" value="1" min="1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- RIGHT COLUMN: Pricing & Details -->
+                                <div>
+                                    <!-- ROI / Pricing -->
+                                    <div class="field-group">
+                                        <div class="field-group-title">價格設定 (Pricing)</div>
+
+                                        <div class="form-grid">
+                                            <div class="col-span-6">
+                                                <div class="input-group">
+                                                    <label class="text-green-400">售價 (Price)</label>
+                                                    <div class="relative">
+                                                        <span
+                                                            class="absolute left-3 top-3.5 text-gray-500 text-lg">$</span>
+                                                        <input type="number" id="priceInp"
+                                                            class="classic-input pl-8 text-green-400 font-bold text-xl"
+                                                            placeholder="0" oninput="calcPayout()">
+                                                    </div>
+                                                    <!-- Price Meter -->
+                                                    <div style="margin-top:1rem; padding:0 0.5rem;">
+                                                        <div
+                                                            style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem;">
+                                                            <span id="pmMin">$0</span>
+                                                            <span id="pmAvg"
+                                                                style="color:var(--primary); font-weight:bold;">$0</span>
+                                                            <span id="pmMax">$0</span>
+                                                        </div>
+                                                        <div
+                                                            style="height:6px; width:100%; background:#334155; border-radius:99px; position:relative; overflow:hidden;">
+                                                            <div
+                                                                style="position:absolute; inset:0; background:linear-gradient(90deg, #22c55e, #eab308, #ef4444); opacity:0.3;">
+                                                            </div>
+                                                            <div id="pmMarker"
+                                                                style="position:absolute; top:0; bottom:0; width:8px; background:white; border-radius:4px; box-shadow:0 0 10px rgba(255,255,255,0.8); transform:translateX(-50%); left:0%; transition:left 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+                                                            </div>
+                                                        </div>
+                                                        <div id="pmLabel"
+                                                            style="font-size:0.8rem; text-align:center; margin-top:0.5rem; height:1.2rem; font-weight:500;">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-span-3">
+                                                <div class="input-group">
+                                                    <label>預計收益 (Payout)</label>
+                                                    <div class="relative">
+                                                        <span class="absolute left-3 top-3.5 text-gray-500">$</span>
+                                                        <input type="number" id="payoutInp"
+                                                            class="classic-input pl-8 text-gray-300" placeholder="0"
+                                                            readonly>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-span-3">
+                                                <div class="input-group">
+                                                    <label>面額 (Face)</label>
+                                                    <div class="relative">
+                                                        <span class="absolute left-3 top-3.5 text-gray-500">$</span>
+                                                        <input type="number" id="faceInp" class="classic-input pl-8"
+                                                            placeholder="原價">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Details -->
+                                    <div class="field-group" style="margin-bottom:0;">
+                                        <div class="field-group-title">票券詳情 (Details)</div>
+                                        <div class="form-grid" style="margin-bottom:0;">
+                                            <div class="col-span-6">
+                                                <div class="input-group">
+                                                    <label class="mb-3">票券類型</label>
+                                                    <div class="pill-toggle">
+                                                        <label>
+                                                            <input type="radio" name="tt" value="paper" checked
+                                                                class="hidden">
+                                                            <span>紙本票 (Paper)</span>
+                                                        </label>
+                                                        <label>
+                                                            <input type="radio" name="tt" value="eticket"
+                                                                class="hidden">
+                                                            <span>電子票 (E-Ticket)</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-span-6">
+                                                <div class="input-group">
+                                                    <label class="mb-3">特殊標記</label>
+                                                    <div class="flex gap-4 mt-2">
+                                                        <label
+                                                            class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-white">
+                                                            <input type="checkbox" class="accent-indigo-500 w-4 h-4">
+                                                            視線遮蔽
+                                                        </label>
+                                                        <label
+                                                            class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-white">
+                                                            <input type="checkbox" class="accent-indigo-500 w-4 h-4">
+                                                            輪椅席
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> <!-- End Right Column -->
+                            </div> <!-- End inspector-grid -->
+
+                            <div class="btn-submit-container">
+                                <button type="submit" class="btn-primary">立即刊登 (List Item)</button>
+                            </div>
+
+                        </form>
+                    </div> <!-- End inspector-scroll -->
+                </div> <!-- End inspector-section -->
+            </div> <!-- End contentWrapper -->
+        </main>
+    </div>
+
+    <script src="js/utils.js?v=10"></script>
+    <script src="js/app.js?v=10"></script>
+    <script>
+        let currentSess = null;
+        let currentArea = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.db) {
+                console.log("DB Loaded with events:", window.db.getEvents().length);
+                renderSidebar();
+            }
+        });
+
+        function renderSidebar(filter = '') {
+            const tree = document.getElementById('eventTree');
+            tree.innerHTML = '';
+
+            const events = window.db.getEvents();
+            // Sort events by ID desc to see new ones first
+            events.sort((a, b) => b.id - a.id);
+
+            events.forEach(ev => {
+                const sessions = window.db.getSessions(ev.id);
+                const matches = sessions.filter(s =>
+                    ev.title.includes(filter) || s.venue.includes(filter)
+                );
+
+                if (matches.length > 0) {
+                    // Create Details/Summary for Accordion
+                    const details = document.createElement('details');
+                    details.className = 'group-details';
+
+                    // Open match if searching
+                    if (filter) details.open = true;
+
+                    const summary = document.createElement('summary');
+                    summary.className = 'tree-group-header';
+                    summary.innerHTML = `
+                        <span>${ev.title}</span>
+                        <span class="text-xs text-gray-400 ml-2 font-normal">(${matches.length})</span>
+                    `;
+                    details.appendChild(summary);
+
+                    const content = document.createElement('div');
+                    content.className = 'group-content';
+
+                    matches.forEach(sess => {
+                        const row = document.createElement('div');
+                        const dt = new Date(sess.session_time);
+                        const dStr = dt.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+                        const tStr = dt.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+
+                        row.className = 'tree-item';
+                        row.innerHTML = `
+                            <span class="font-mono text-gray-300 text-sm whitespace-nowrap mr-2">${dStr} ${tStr}</span>
+                            <span class="tree-venue truncate" title="${sess.venue}">${sess.venue}</span>
+                        `;
+                        row.onclick = () => selectSession(ev, sess, row);
+                        content.appendChild(row);
+                    });
+
+                    details.appendChild(content);
+                    tree.appendChild(details);
+                }
+            });
+        }
+
+        function filterSidebar() {
+            renderSidebar(document.getElementById('eventSearch').value);
+        }
+
+        function selectSession(ev, sess, el) {
+            currentSess = sess;
+            // UI Active
+            document.querySelectorAll('.tree-item').forEach(x => x.classList.remove('active'));
+            el.classList.add('active');
+
+            // Show Content
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('contentWrapper').style.display = 'flex';
+
+            // Headers
+            document.getElementById('headerTitle').textContent = ev.title;
+            const dt = new Date(sess.session_time);
+            document.getElementById('headerTime').textContent = dt.toLocaleString('zh-TW');
+            document.getElementById('headerVenue').textContent = sess.venue;
+
+            // Load Areas
+            renderAreas(sess.id);
+
+            // Note: We no longer hide the form. It's always visible to show the Zone Selector.
+        }
+
+        function renderAreas(sessId) {
+            const grid = document.getElementById('areaGrid');
+            grid.innerHTML = '';
+
+            const areas = window.db.getSessionAreas(sessId);
+
+            areas.forEach(a => {
+                const card = document.createElement('div');
+                card.className = 'area-card';
+                card.innerHTML = `
+                    <div class="font-bold text-white text-sm mb-1">${a.name}</div>
+                    <div class="text-xs text-indigo-400 font-mono">$${a.minPrice} - $${a.maxPrice}</div>
+                `;
+                card.onclick = () => loadForm(a, card);
+                grid.appendChild(card);
+            });
+        }
+
+        function loadForm(area, el) {
+            currentArea = area;
+            document.querySelectorAll('.area-card').forEach(x => x.classList.remove('selected'));
+            el.classList.add('selected');
+
+            document.getElementById('targetAreaName').textContent = area.name;
+            document.getElementById('mktPrice').textContent = `$${area.avgPrice}`;
+
+            // Reset Fields
+            document.getElementById('priceInp').value = '';
+            document.getElementById('payoutInp').value = '';
+
+            // Init Meter
+            updatePriceMeter(0);
+        }
+
+        function toggleC() {
+            const chk = document.getElementById('consecutiveCheck').checked;
+            document.getElementById('seatLabel').textContent = chk ? "起始座號 (Start Seat)" : "座位號碼 (Comma separated)";
+            document.getElementById('seatInp').placeholder = chk ? "1" : "1,3,5";
+        }
+
+        function autoQty() {
+            const val = document.getElementById('seatInp').value;
+            if (val.includes(',')) {
+                document.getElementById('qtyInp').value = val.split(',').filter(x => x.trim()).length;
+            }
+        }
+
+        function calcPayout() {
+            const p = document.getElementById('priceInp').value;
+            if (p) {
+                document.getElementById('payoutInp').value = Math.round(p * 0.9);
+                updatePriceMeter(p);
+            } else {
+                updatePriceMeter(0);
+            }
+        }
+
+        function updatePriceMeter(price) {
+            if (!currentArea) return;
+            const min = currentArea.minPrice * 0.8;
+            const max = currentArea.maxPrice * 1.2;
+
+            // Text bounds
+            document.getElementById('pmMin').textContent = `$${currentArea.minPrice}`;
+            document.getElementById('pmAvg').textContent = `$${currentArea.avgPrice}`;
+            document.getElementById('pmMax').textContent = `$${currentArea.maxPrice}`;
+
+            if (!price) {
+                document.getElementById('pmMarker').style.left = '0%';
+                document.getElementById('pmLabel').textContent = '';
+                return;
+            }
+
+            let percent = ((price - min) / (max - min)) * 100;
+            percent = Math.max(0, Math.min(100, percent));
+
+            document.getElementById('pmMarker').style.left = `${percent}%`;
+
+            const label = document.getElementById('pmLabel');
+            if (price < currentArea.minPrice) {
+                label.textContent = "低於市場價 (Great Deal)";
+                label.className = "text-xs text-center mt-1 text-green-400 h-4 font-bold";
+            } else if (price > currentArea.maxPrice) {
+                label.textContent = "高於市場價 (Premium)";
+                label.className = "text-xs text-center mt-1 text-red-400 h-4";
+            } else {
+                label.textContent = "符合市場行情 (Fair)";
+                label.className = "text-xs text-center mt-1 text-yellow-500 h-4";
+            }
+        }
+
+        function submitListing(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const old = btn.textContent;
+            btn.textContent = "處理中...";
+            setTimeout(() => {
+                alert("刊登成功！(Listing Created)");
+                btn.textContent = old;
+            }, 800);
+        }
+    </script>
+</body>
+
+</html>
