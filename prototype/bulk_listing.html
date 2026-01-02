@@ -442,6 +442,53 @@
             border-color: var(--primary);
             background: rgba(99, 102, 241, 0.15);
         }
+
+        /* Ticket Entry Styling */
+        .ticket-entry {
+            background: var(--bg-dark);
+            border: 1px solid #334155;
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .ticket-entry:hover {
+            border-color: #475569;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .ticket-notch {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            width: 12px;
+            height: 24px;
+            background: #182030;
+            /* Match container bg */
+            border-radius: 12px 0 0 12px;
+            border: 1px solid #334155;
+            border-right: none;
+            transform: translateY(-50%);
+        }
+
+        .ticket-dashed-line {
+            position: absolute;
+            right: 25%;
+            top: 10px;
+            bottom: 10px;
+            border-left: 2px dashed #334155;
+        }
+
+        /* Larger Checkbox */
+        .chk-lg {
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -451,8 +498,8 @@
         <div class="text-xl font-bold tracking-tight mr-10">BigSeller</div>
         <nav class="flex gap-2">
             <a href="dashboard.html" class="nav-link">儀表板</a>
-            <a href="listing.html" class="nav-link active">門票刊登</a>
-            <a href="bulk_listing.html" class="nav-link">批量刊登</a>
+            <a href="listing.html" class="nav-link">門票刊登</a>
+            <a href="bulk_listing.html" class="nav-link active">批量刊登</a>
             <a href="orders.html" class="nav-link">訂單管理</a>
             <a href="settings.html" class="nav-link">賣家設定</a>
         </nav>
@@ -522,18 +569,8 @@
                         <form onsubmit="submitListing(event)">
 
                             <!-- Group 1: Zone Selection (Integrated) -->
-                            <div class="field-group">
-                                <div class="field-group-title">
-                                    <span>選擇區域 (Select Zone)</span>
-                                    <span id="targetAreaName"
-                                        class="ml-auto text-indigo-400 font-normal normal-case text-sm">--</span>
-                                </div>
-                                <div class="area-grid-wrapper" style="margin-top:0.5rem;">
-                                    <div id="areaGrid" class="area-grid">
-                                        <!-- JS Injects Grid Cards Here -->
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Group 1: Hidden Area Trigger (Logic Only) -->
+                            <div style="display:none;"></div>
 
                             <!-- 2-Column Layout for Input Fields -->
                             <div class="inspector-grid">
@@ -541,42 +578,17 @@
                                 <!-- LEFT COLUMN: Seat Info -->
                                 <div>
                                     <div class="field-group h-full">
-                                        <div class="field-group-title">座位資訊 (Seat Info)</div>
+                                        <div class="flex justify-between items-center mb-4">
+                                            <div class="field-group-title mb-0" style="margin-bottom:0; border:none;">
+                                                座位資訊 (Seat Info)</div>
+                                            <button type="button" onclick="addSeatEntry()"
+                                                class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded hover:bg-indigo-500/40">
+                                                + 新增一組
+                                            </button>
+                                        </div>
 
-                                        <!-- Consecutive Toggle -->
-                                        <label class="consecutive-box mb-6">
-                                            <div class="flex flex-col">
-                                                <span class="font-bold text-white text-lg">連號座位 (Consecutive)</span>
-                                                <span class="text-sm text-indigo-300 mt-1">啟用後只需填寫第一個座號，系統自動計算</span>
-                                            </div>
-                                            <input type="checkbox" id="consecutiveCheck" checked
-                                                class="w-6 h-6 accent-indigo-500 rounded cursor-pointer"
-                                                onchange="toggleC()">
-                                        </label>
-
-                                        <div class="form-grid">
-                                            <div class="col-span-3">
-                                                <div class="input-group">
-                                                    <label>排 (Row)</label>
-                                                    <input type="text" id="rowInp"
-                                                        class="classic-input text-center font-mono font-bold"
-                                                        placeholder="eg. 5">
-                                                </div>
-                                            </div>
-                                            <div class="col-span-5">
-                                                <div class="input-group">
-                                                    <label id="seatLabel">起始座號 (Start Seat)</label>
-                                                    <input type="text" id="seatInp" class="classic-input font-mono"
-                                                        placeholder="eg. 1" oninput="autoQty()">
-                                                </div>
-                                            </div>
-                                            <div class="col-span-4">
-                                                <div class="input-group">
-                                                    <label>數量 (Qty)</label>
-                                                    <input type="number" id="qtyInp"
-                                                        class="classic-input text-center font-bold" value="1" min="1">
-                                                </div>
-                                            </div>
+                                        <div id="seatEntriesContainer" class="flex flex-col gap-4">
+                                            <!-- Dynamic Entries -->
                                         </div>
                                     </div>
                                 </div>
@@ -585,66 +597,9 @@
                                 <div>
                                     <!-- ROI / Pricing -->
                                     <div class="field-group">
-                                        <div class="field-group-title">價格設定 (Pricing)</div>
-
-                                        <div class="form-grid">
-                                            <div class="col-span-6">
-                                                <div class="input-group">
-                                                    <label class="text-green-400">售價 (Price)</label>
-                                                    <div class="relative">
-                                                        <span
-                                                            class="absolute left-3 top-3.5 text-gray-500 text-lg">$</span>
-                                                        <input type="number" id="priceInp"
-                                                            class="classic-input pl-8 text-green-400 font-bold text-xl"
-                                                            placeholder="0" oninput="calcPayout()">
-                                                    </div>
-                                                    <!-- Price Meter -->
-                                                    <div style="margin-top:1rem; padding:0 0.5rem;">
-                                                        <div
-                                                            style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem;">
-                                                            <span id="pmMin">$0</span>
-                                                            <span id="pmAvg"
-                                                                style="color:var(--primary); font-weight:bold;">$0</span>
-                                                            <span id="pmMax">$0</span>
-                                                        </div>
-                                                        <div
-                                                            style="height:6px; width:100%; background:#334155; border-radius:99px; position:relative; overflow:hidden;">
-                                                            <div
-                                                                style="position:absolute; inset:0; background:linear-gradient(90deg, #22c55e, #eab308, #ef4444); opacity:0.3;">
-                                                            </div>
-                                                            <div id="pmMarker"
-                                                                style="position:absolute; top:0; bottom:0; width:8px; background:white; border-radius:4px; box-shadow:0 0 10px rgba(255,255,255,0.8); transform:translateX(-50%); left:0%; transition:left 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
-                                                            </div>
-                                                        </div>
-                                                        <div id="pmLabel"
-                                                            style="font-size:0.8rem; text-align:center; margin-top:0.5rem; height:1.2rem; font-weight:500;">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-span-3">
-                                                <div class="input-group">
-                                                    <label>預計收益 (Payout)</label>
-                                                    <div class="relative">
-                                                        <span class="absolute left-3 top-3.5 text-gray-500">$</span>
-                                                        <input type="number" id="payoutInp"
-                                                            class="classic-input pl-8 text-gray-300" placeholder="0"
-                                                            readonly>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-span-3">
-                                                <div class="input-group">
-                                                    <label>面額 (Face)</label>
-                                                    <div class="relative">
-                                                        <span class="absolute left-3 top-3.5 text-gray-500">$</span>
-                                                        <input type="number" id="faceInp" class="classic-input pl-8"
-                                                            placeholder="原價">
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <div class="field-group-title">價格參考 (Pricing Reference)</div>
+                                        <div class="text-sm text-gray-400 mb-2">
+                                            請在左側針對每一組座位設定價格。下方為當前區域的市場行情參考。
                                         </div>
                                     </div>
 
@@ -796,104 +751,189 @@
         }
 
         function renderAreas(sessId) {
-            const grid = document.getElementById('areaGrid');
-            grid.innerHTML = '';
+            window.currentAvailableAreas = window.db.getSessionAreas(sessId);
 
-            const areas = window.db.getSessionAreas(sessId);
+            // Note: Grid is removed per user request. 
+            // We just init the lists.
 
-            areas.forEach(a => {
-                const card = document.createElement('div');
-                card.className = 'area-card';
-                card.innerHTML = `
-                    <div class="font-bold text-white text-sm mb-1">${a.name}</div>
-                    <div class="text-xs text-indigo-400 font-mono">$${a.minPrice} - $${a.maxPrice}</div>
-                `;
-                card.onclick = () => loadForm(a, card);
-                grid.appendChild(card);
-            });
+            // Init with one empty entry
+            const container = document.getElementById('seatEntriesContainer');
+            container.innerHTML = '';
+            addSeatEntry();
         }
 
-        function loadForm(area, el) {
-            currentArea = area;
-            document.querySelectorAll('.area-card').forEach(x => x.classList.remove('selected'));
-            el.classList.add('selected');
+        // Renamed/Refactored to handle row interactions
+        function addSeatEntry(preselectedAreaId = null) {
+            const container = document.getElementById('seatEntriesContainer');
 
-            document.getElementById('targetAreaName').textContent = area.name;
-            document.getElementById('mktPrice').textContent = `$${area.avgPrice}`;
+            // Create Entry Structure with Ticket Style
+            const div = document.createElement('div');
+            div.className = 'ticket-entry seat-entry';
+            div.innerHTML = `
+                <button type="button" onclick="removeSeatEntry(this)"
+                    class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 shadow-lg"
+                    style="z-index:20;">&times;</button>
+                
+                <!-- Notch Effect -->
+                <div class="ticket-notch"></div>
+                
+                <div class="grid grid-cols-12 gap-4">
+                    <!-- Main Ticket Info (Left 75%) -->
+                    <div class="col-span-9 pr-6">
+                        <!-- Row 1: Area & Price -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">區域 (Area)</label>
+                                <select class="classic-input area-inp py-1 px-2 text-sm h-10 bg-gray-900">
+                                    <option value="" disabled selected>選擇區域...</option>
+                                </select>
+                            </div>
+                            <div>
+                               <label class="block text-xs text-green-400 mb-1">單價 (Price)</label>
+                                <input type="number" class="classic-input price-inp h-10 py-1 text-green-400 font-bold bg-gray-900" placeholder="$">
+                            </div>
+                        </div>
 
-            // Reset Fields
-            document.getElementById('priceInp').value = '';
-            document.getElementById('payoutInp').value = '';
+                        <!-- Row 2: Row/Seat -->
+                        <div class="grid grid-cols-12 gap-3 items-end">
+                            <div class="col-span-3">
+                                 <label class="block text-xs text-gray-500 mb-1">排 (Row)</label>
+                                 <input type="text" class="classic-input text-center font-mono font-bold row-inp h-10 py-1 bg-gray-900" placeholder="Row">
+                            </div>
+                            
+                            <div class="col-span-9">
+                                <label class="lbl-seat block text-xs text-gray-500 mb-1">起始座號</label>
+                                <input type="text" class="classic-input font-mono seat-inp h-10 py-1 bg-gray-900" placeholder="eg. 1" oninput="autoQty(this)">
+                            </div>
+                        </div>
+                    </div>
 
-            // Init Meter
-            updatePriceMeter(0);
+                    <!-- Side Info (Right 25%) -->
+                    <div class="col-span-3 pl-4 flex flex-col justify-center border-l-2 border-dashed border-gray-700">
+                        <div class="mb-4">
+                            <label class="block text-xs text-gray-500 mb-1">數量 (Qty)</label>
+                            <input type="number" class="classic-input text-center font-bold qty-inp h-10 py-1 bg-gray-900" value="1" min="1">
+                        </div>
+                        
+                        <!-- Improved Checkbox -->
+                        <label class="flex items-center gap-2 cursor-pointer select-none bg-indigo-500/10 p-2 rounded border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors">
+                            <input type="checkbox" class="chk-lg consecutive-chk" checked onchange="toggleRowConsecutive(this)">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-indigo-400">連號 (Seq)</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            `;
+
+            // Populate Area
+            const select = div.querySelector('.area-inp');
+            if (window.currentAvailableAreas) {
+                window.currentAvailableAreas.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `${a.name} ($${a.avgPrice})`;
+                    select.appendChild(opt);
+                });
+            }
+            if (preselectedAreaId) {
+                select.value = preselectedAreaId;
+            }
+
+            container.appendChild(div);
+
+            if (preselectedAreaId) {
+                div.querySelector('.price-inp').focus();
+            }
+
+            // Init UI 
+            toggleRowConsecutive(div.querySelector('.consecutive-chk'));
         }
 
-        function toggleC() {
-            const chk = document.getElementById('consecutiveCheck').checked;
-            document.getElementById('seatLabel').textContent = chk ? "起始座號 (Start Seat)" : "座位號碼 (Comma separated)";
-            document.getElementById('seatInp').placeholder = chk ? "1" : "1,3,5";
-        }
+        function removeSeatEntry(btn) {
+            const container = document.getElementById('seatEntriesContainer');
+            // Allow removing even if it's the last one? Ideally, keep one empty.
+            // But if specific delete, just remove.
+            btn.closest('.seat-entry').remove();
 
-        function autoQty() {
-            const val = document.getElementById('seatInp').value;
-            if (val.includes(',')) {
-                document.getElementById('qtyInp').value = val.split(',').filter(x => x.trim()).length;
+            // If empty, add a default one
+            if (container.children.length === 0) {
+                addSeatEntry();
             }
         }
 
-        function calcPayout() {
-            const p = document.getElementById('priceInp').value;
-            if (p) {
-                document.getElementById('payoutInp').value = Math.round(p * 0.9);
-                updatePriceMeter(p);
-            } else {
-                updatePriceMeter(0);
+        function toggleRowConsecutive(chkEl) {
+            const entry = chkEl.closest('.seat-entry');
+            const isConsecutive = chkEl.checked;
+
+            const label = entry.querySelector('.lbl-seat');
+            const input = entry.querySelector('.seat-inp');
+
+            label.textContent = isConsecutive ? "起始座號" : "座號 (逗號分隔)";
+            input.placeholder = isConsecutive ? "eg. 1" : "1,3,5";
+        }
+
+        function autoQty(inputInfo) {
+            const val = inputInfo.value;
+            const entry = inputInfo.closest('.seat-entry');
+            const qtyInp = entry.querySelector('.qty-inp');
+            const isConsecutive = entry.querySelector('.consecutive-chk').checked;
+
+            if (!isConsecutive && val.includes(',')) {
+                const count = val.split(',').filter(x => x.trim()).length;
+                if (count > 0) qtyInp.value = count;
             }
         }
 
-        function updatePriceMeter(price) {
-            if (!currentArea) return;
-            const min = currentArea.minPrice * 0.8;
-            const max = currentArea.maxPrice * 1.2;
-
-            // Text bounds
-            document.getElementById('pmMin').textContent = `$${currentArea.minPrice}`;
-            document.getElementById('pmAvg').textContent = `$${currentArea.avgPrice}`;
-            document.getElementById('pmMax').textContent = `$${currentArea.maxPrice}`;
-
-            if (!price) {
-                document.getElementById('pmMarker').style.left = '0%';
-                document.getElementById('pmLabel').textContent = '';
-                return;
-            }
-
-            let percent = ((price - min) / (max - min)) * 100;
-            percent = Math.max(0, Math.min(100, percent));
-
-            document.getElementById('pmMarker').style.left = `${percent}%`;
-
-            const label = document.getElementById('pmLabel');
-            if (price < currentArea.minPrice) {
-                label.textContent = "低於市場價 (Great Deal)";
-                label.className = "text-xs text-center mt-1 text-green-400 h-4 font-bold";
-            } else if (price > currentArea.maxPrice) {
-                label.textContent = "高於市場價 (Premium)";
-                label.className = "text-xs text-center mt-1 text-red-400 h-4";
-            } else {
-                label.textContent = "符合市場行情 (Fair)";
-                label.className = "text-xs text-center mt-1 text-yellow-500 h-4";
-            }
-        }
+        // Stub for meter (not used per row for simplicity, or could add later)
+        function updatePriceMeter(price) { }
 
         function submitListing(e) {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
+            const btn = e.target.querySelector('button[type="submit"]');
+
+            // Collect info
+            const entries = [];
+            const rows = document.querySelectorAll('.seat-entry');
+            let isValid = true;
+
+            rows.forEach(row => {
+                const area = row.querySelector('.area-inp').value;
+                const price = row.querySelector('.price-inp').value;
+                const r = row.querySelector('.row-inp').value;
+                const s = row.querySelector('.seat-inp').value;
+                const q = row.querySelector('.qty-inp').value;
+
+                if (!area || !price || !q) {
+                    isValid = false;
+                    row.classList.add('border-red-500');
+                } else {
+                    row.classList.remove('border-red-500');
+                    row.classList.add('border-gray-700');
+                }
+
+                if (area && price) {
+                    entries.push({ area, price, row: r, seat: s, qty: q });
+                }
+            });
+
+            if (!isValid && entries.length === 0) {
+                alert("請至少填寫完整一筆資料 (Area, Price, Qty)");
+                return;
+            }
+
             const old = btn.textContent;
-            btn.textContent = "處理中...";
+            btn.textContent = `正在增加 ${entries.length} 筆票券...`;
+            btn.disabled = true;
+
             setTimeout(() => {
-                alert("刊登成功！(Listing Created)");
+                alert(`成功上架 ${entries.length} 筆資料！\n(Successfully listed ${entries.length} items)`);
                 btn.textContent = old;
+                btn.disabled = false;
+
+                // Reset to one empty
+                document.getElementById('seatEntriesContainer').innerHTML = '';
+                addSeatEntry();
             }, 800);
         }
     </script>

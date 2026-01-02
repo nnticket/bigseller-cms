@@ -8,6 +8,84 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap"
         rel="stylesheet">
+    <style>
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.8rem 0;
+            cursor: pointer;
+            position: relative;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .tab-btn.active {
+            color: white;
+            font-weight: 500;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .count-badge {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            margin-left: 6px;
+        }
+
+        /* Detail View */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .detail-card h5 {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.8rem;
+        }
+
+        .detail-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+
+        .shipping-section {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -16,7 +94,7 @@
             <div class="logo">BigSeller 賣家控制台</div>
             <nav class="nav">
                 <a href="dashboard.html">儀表板</a>
-                <a href="listing.html">新增票券</a>
+                <a href="tickets.html">門票管理</a>
                 <a href="orders.html" class="active">訂單管理</a>
                 <a href="settings.html">賣家設定</a>
             </nav>
@@ -33,16 +111,32 @@
                 </div>
             </div>
 
+            <!-- Filters -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="setFilter('all')">全部 (All) <span id="cnt-all"
+                        class="count-badge">0</span></button>
+                <button class="tab-btn" onclick="setFilter('pending')">待付款 (Pending) <span id="cnt-pending"
+                        class="count-badge">0</span></button>
+                <button class="tab-btn" onclick="setFilter('paid')">待出貨 (Paid) <span id="cnt-paid"
+                        class="count-badge">0</span></button>
+                <button class="tab-btn" onclick="setFilter('shipping')">運送中 (Shipping) <span id="cnt-shipping"
+                        class="count-badge">0</span></button>
+                <button class="tab-btn" onclick="setFilter('completed')">已完成 (Completed) <span id="cnt-completed"
+                        class="count-badge">0</span></button>
+                <button class="tab-btn" onclick="setFilter('cancelled')">已取消 (Cancelled) <span id="cnt-cancelled"
+                        class="count-badge">0</span></button>
+            </div>
+
             <div class="glass-card" style="padding:0; overflow:hidden">
                 <table class="orders-table">
                     <thead>
                         <tr>
                             <th>訂單編號</th>
+                            <th>活動場次 (Event)</th>
                             <th>買家</th>
-                            <th>總金額 (Total)</th>
-                            <th>狀態</th>
-                            <th>建立時間</th>
-                            <th>操作</th>
+                            <th class="text-right">總金額 (Total)</th>
+                            <th class="text-center">狀態</th>
+                            <th class="text-right">建立時間</th>
                         </tr>
                     </thead>
                     <tbody id="orderTableBody">
@@ -65,9 +159,179 @@
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
     <script>
+        let currentFilter = 'all';
+
         document.addEventListener('DOMContentLoaded', () => {
-            initOrderFlow();
+            renderOrderTable();
         });
+
+        function setFilter(status) {
+            currentFilter = status;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.onclick.toString().includes(status));
+            });
+            renderOrderTable();
+        }
+
+        function renderOrderTable() {
+            const tableBody = document.getElementById('orderTableBody');
+            tableBody.innerHTML = '';
+
+            const allOrders = window.db.getAllOrders();
+
+            // Update counts
+            document.getElementById('cnt-all').textContent = allOrders.length;
+            ['pending', 'paid', 'shipping', 'completed', 'cancelled'].forEach(s => {
+                document.getElementById(`cnt-${s}`).textContent = allOrders.filter(o => o.status === s).length;
+            });
+
+            // Filter
+            const orders = currentFilter === 'all'
+                ? allOrders
+                : allOrders.filter(o => o.status === currentFilter);
+
+            if (orders.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">尚無此狀態的訂單</td></tr>`;
+                return;
+            }
+
+            orders.forEach(order => {
+                const statusInfo = Utils.getStatus(order.status);
+
+                const tr = document.createElement('tr');
+                tr.className = "cursor-pointer hover:bg-white/5 border-b border-gray-700/50";
+
+                // Event Info
+                const eventInfo = `
+                    <div class="font-bold text-white text-sm">${order.event_title || '--'}</div>
+                    <div class="text-xs text-gray-400 mt-1">${order.session_time || ''} | ${order.venue || ''}</div>
+                `;
+
+                tr.innerHTML = `
+                    <td class="p-4 align-top"><span class="font-mono text-indigo-400 font-bold">#${order.id.split('-').pop()}</span><div class="text-xs text-gray-500 mt-1">${order.id}</div></td>
+                    <td class="p-4 align-top text-left">${eventInfo}</td>
+                    <td class="p-4 align-top">
+                        <div class="text-white">${order.buyer_name}</div>
+                        <div class="text-xs text-gray-500">${order.buyer_id || ''}</div>
+                    </td>
+                    <td class="p-4 align-top text-right font-mono text-white">${Utils.formatCurrency(order.total_amount)}</td>
+                    <td class="p-4 align-top text-center"><span class="status-badge" style="background:${statusInfo.color}20; color:${statusInfo.color}">${statusInfo.text}</span></td>
+                    <td class="p-4 align-top text-right text-gray-400 text-sm font-mono">${order.created_at.split(' ')[0]}</td>
+                `;
+
+                // Detail Row
+                const detailTr = document.createElement('tr');
+                detailTr.className = 'item-row bg-gray-900/50';
+                detailTr.id = `detail-${order.id}`;
+                detailTr.style.display = 'none'; // Initially hidden without class for simple toggle
+
+                // Build Items HTML
+                let itemsHtml = order.items.map(item =>
+                    `<div class="flex justify-between py-2 border-b border-dashed border-gray-700 last:border-0">
+                        <span class="text-gray-300">🎫 ${item.ticket_name}</span>
+                        <span class="font-mono text-white">${Utils.formatCurrency(item.price)}</span>
+                    </div>`
+                ).join('');
+
+                // Shipping Action Area
+                let actionArea = '';
+                if (order.status === 'paid') {
+                    actionArea = `
+                        <div class="shipping-section mt-4">
+                            <div class="flex items-center gap-2 flex-1">
+                                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                                <span class="text-sm font-bold text-indigo-300">出貨作業</span>
+                            </div>
+                            <input type="text" id="track-${order.id}" class="classic-input text-sm py-1 px-3 w-48 bg-gray-800 border-gray-600" placeholder="輸入物流單號...">
+                            <button onclick="shipOrder('${order.id}')" class="btn-primary py-1 px-4 text-sm whitespace-nowrap">確認出貨</button>
+                        </div>
+                    `;
+                } else if (order.status === 'shipping' || order.status === 'completed') {
+                    actionArea = `
+                         <div class="mt-4 p-3 bg-gray-800/50 rounded border border-gray-700 flex justify-between items-center">
+                            <div class="text-sm">
+                                <span class="text-gray-500 mr-2">物流單號</span>
+                                <span class="font-mono text-white font-bold tracking-wider">${order.tracking_number || 'N/A'}</span>
+                            </div>
+                            <a href="#" class="text-xs text-indigo-400 hover:text-indigo-300">物流追蹤 &nearr;</a>
+                        </div>
+                    `;
+                }
+
+                const recipient = order.recipient_info || { name: '--', phone: '--', address: '--' };
+                const payment = order.payment_info || { method: '--', transaction_id: '--' };
+
+                detailTr.innerHTML = `
+                    <td colspan="6" class="p-6">
+                        <div class="detail-grid">
+                            <!-- Column 1: Recipient -->
+                            <div class="detail-card">
+                                <h5>收件資訊 (Recipient)</h5>
+                                <div class="detail-text">
+                                    <div class="font-bold text-white mb-1">${recipient.name}</div>
+                                    <div class="mb-1">${recipient.phone}</div>
+                                    <div class="text-gray-400 text-sm">${recipient.address}</div>
+                                </div>
+                            </div>
+
+                            <!-- Column 2: Payment -->
+                            <div class="detail-card">
+                                <h5>付款資訊 (Payment)</h5>
+                                <div class="detail-text">
+                                    <div class="mb-2"><span class="text-gray-500 text-xs block">付款方式</span> ${payment.method}</div>
+                                    <div><span class="text-gray-500 text-xs block">金流單號</span> <span class="font-mono text-sm">${payment.transaction_id}</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Column 3: Items -->
+                             <div class="detail-card">
+                                <h5>購買項目 (Items)</h5>
+                                <div class="detail-text">
+                                    ${itemsHtml}
+                                    <div class="flex justify-between mt-2 pt-2 border-t border-gray-600 font-bold">
+                                        <span>Total</span>
+                                        <span>${Utils.formatCurrency(order.total_amount)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${actionArea}
+                    </td>
+                `;
+
+                tr.onclick = (e) => {
+                    // Prevent toggle if clicking button/input
+                    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+
+                    const d = document.getElementById(`detail-${order.id}`);
+                    const isHidden = d.style.display === 'none';
+                    d.style.display = isHidden ? 'table-row' : 'none';
+                    tr.style.background = isHidden ? 'rgba(255,255,255,0.05)' : '';
+                };
+
+                tableBody.appendChild(tr);
+                tableBody.appendChild(detailTr);
+            });
+        }
+
+        function shipOrder(orderId) {
+            const input = document.getElementById(`track-${orderId}`);
+            const trackingNum = input.value.trim();
+            if (!trackingNum) {
+                alert('請輸入物流單號！');
+                return;
+            }
+
+            if (confirm(`確認使用物流單號 [${trackingNum}] 進行出貨？`)) {
+                window.db.updateOrder(orderId, {
+                    status: 'shipping',
+                    tracking_number: trackingNum
+                });
+                alert('出貨成功！');
+                renderOrderTable();
+            }
+        }
     </script>
 </body>
 

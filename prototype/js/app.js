@@ -84,32 +84,121 @@ class MockDatabase {
 
         // 4. Seller Tickets (Inventory)
         this.tickets = [];
+        this._generateMockTickets();
 
         // 6. Orders
+        // 6. Orders (Enriched with Event, Recipient, Payment Info)
         this.orders = [
             {
                 id: 'ORD-2025-001',
                 buyer_name: '王小明',
+                buyer_id: 'USER_001',
                 total_amount: 11000,
                 status: 'paid',
                 created_at: '2025-12-31 10:30',
+                event_title: '周杰倫嘉年華世界巡迴演唱會 - 臺北站',
+                session_time: '2025-12-31 20:00',
+                venue: '臺北大巨蛋',
+                recipient_info: {
+                    name: '王小明',
+                    phone: '0912-345-678',
+                    address: '台北市信義區信義路五段7號 (Taipei 101)'
+                },
+                payment_info: {
+                    method: 'Credit Card',
+                    transaction_id: 'TXN_1234567890'
+                },
+                tracking_number: null,
                 items: [
                     { ticket_name: '特區 Rock A - 5排 - 12號', price: 5500 },
                     { ticket_name: '特區 Rock A - 5排 - 13號', price: 5500 }
                 ]
             },
-            { id: 'ORD-2025-002', buyer_name: '陳大文', total_amount: 3800, status: 'shipping', created_at: '2025-12-31 14:15', items: [{ ticket_name: '看台 Stand A - 20排 - 5號', price: 3800 }] },
-            { id: 'ORD-2025-003', buyer_name: '吳美丽', total_amount: 16500, status: 'completed', created_at: '2025-12-30 09:12', items: [{ ticket_name: '特區 Rock A - 1排 - 1號', price: 5500 }, { ticket_name: '特區 Rock A - 1排 - 2號', price: 5500 }, { ticket_name: '特區 Rock A - 1排 - 3號', price: 5500 }] },
-            { id: 'ORD-2025-004', buyer_name: '林志豪', total_amount: 3200, status: 'pending', created_at: '2025-12-31 16:45', items: [{ ticket_name: '看台 Stand B - 45排 - 10號', price: 3200 }] },
-            // New Orders
-            { id: 'ORD-2025-005', buyer_name: '張惠妹粉', total_amount: 12000, status: 'paid', created_at: '2025-12-31 11:20', items: [{ ticket_name: '特一區 Vip - 1排 - 8號', price: 6000 }, { ticket_name: '特一區 Vip - 1排 - 9號', price: 6000 }] },
-            { id: 'ORD-2025-006', buyer_name: 'Kevine', total_amount: 7000, status: 'paid', created_at: '2025-12-31 13:00', items: [{ ticket_name: 'Standing A - Seq 102', price: 3500 }, { ticket_name: 'Standing A - Seq 103', price: 3500 }] },
-            { id: 'ORD-2025-007', buyer_name: 'John Doe', total_amount: 2200, status: 'cancelled', created_at: '2025-12-29 18:00', items: [{ ticket_name: 'Seated B - Row 55 - 12', price: 2200 }] },
-            { id: 'ORD-2025-008', buyer_name: 'Alice', total_amount: 4500, status: 'shipping', created_at: '2025-12-31 09:00', items: [{ ticket_name: 'Standing A - Seq 500', price: 4500 }] },
-            { id: 'ORD-2025-009', buyer_name: 'Bob', total_amount: 9600, status: 'pending', created_at: '2025-12-31 17:10', items: [{ ticket_name: '特區 Rock A - 10排 - 1號', price: 4800 }, { ticket_name: '特區 Rock A - 10排 - 2號', price: 4800 }] },
-            { id: 'ORD-2025-010', buyer_name: 'Charlie', total_amount: 4200, status: 'completed', created_at: '2025-12-28 10:00', items: [{ ticket_name: '搖滾區 Rock - 300號', price: 4200 }] },
-            { id: 'ORD-2025-011', buyer_name: 'David', total_amount: 5500, status: 'paid', created_at: '2025-12-31 15:30', items: [{ ticket_name: '特區 Rock A - 2排 - 5號', price: 5500 }] },
-            { id: 'ORD-2025-012', buyer_name: 'Eve', total_amount: 2800, status: 'pending', created_at: '2025-12-31 17:45', items: [{ ticket_name: '看台 Stand B - 12排 - 22號', price: 2800 }] }
+            {
+                id: 'ORD-2025-002',
+                buyer_name: '陳大文',
+                buyer_id: 'USER_002',
+                total_amount: 3800,
+                status: 'shipping', // Shipped
+                created_at: '2025-12-31 14:15',
+                event_title: 'aMEI ASMR MAX 演唱會 - 高雄站',
+                session_time: '2025-12-25 19:30',
+                venue: '高雄巨蛋',
+                recipient_info: {
+                    name: '陳大文',
+                    phone: '0922-000-111',
+                    address: '高雄市左營區博愛二路777號'
+                },
+                payment_info: {
+                    method: 'LinePay',
+                    transaction_id: 'TXN_LINE_9988'
+                },
+                tracking_number: 'TRK-881239912',
+                items: [{ ticket_name: '看台 Stand A - 20排 - 5號', price: 3800 }]
+            },
+            {
+                id: 'ORD-2025-005',
+                buyer_name: '張惠妹粉',
+                buyer_id: 'USER_005',
+                total_amount: 12000,
+                status: 'paid',
+                created_at: '2025-12-31 11:20',
+                event_title: 'aMEI ASMR MAX 演唱會 - 高雄站',
+                session_time: '2025-12-31 21:30',
+                venue: '高雄巨蛋',
+                recipient_info: {
+                    name: '張惠妹粉',
+                    phone: '0933-444-555',
+                    address: '台中市西屯區台灣大道三段'
+                },
+                payment_info: {
+                    method: 'Credit Card',
+                    transaction_id: 'TXN_CC_556677'
+                },
+                tracking_number: null,
+                items: [{ ticket_name: '特一區 Vip - 1排 - 8號', price: 6000 }, { ticket_name: '特一區 Vip - 1排 - 9號', price: 6000 }]
+            },
+            {
+                id: 'ORD-2025-010',
+                buyer_name: 'Charlie',
+                buyer_id: 'USER_010',
+                total_amount: 4200,
+                status: 'completed',
+                created_at: '2025-12-28 10:00',
+                event_title: 'Maroon 5 Asia Tour 2025',
+                session_time: '2025-02-14 20:00',
+                venue: '高雄世運主場館',
+                recipient_info: {
+                    name: 'Charlie',
+                    phone: '0955-666-777',
+                    address: '台南市東區中華東路'
+                },
+                payment_info: {
+                    method: 'ATM Transfer',
+                    transaction_id: 'TXN_ATM_112233'
+                },
+                tracking_number: 'TRK-FINISHED-001',
+                items: [{ ticket_name: '搖滾區 Rock - 300號', price: 4200 }]
+            },
+            {
+                id: 'ORD-2025-009',
+                buyer_name: 'Bob',
+                buyer_id: 'USER_009',
+                total_amount: 9600,
+                status: 'pending',
+                created_at: '2025-12-31 17:10',
+                event_title: '周杰倫嘉年華世界巡迴演唱會',
+                session_time: '2026-01-01 19:30',
+                venue: '臺北大巨蛋',
+                recipient_info: {
+                    name: 'Bob',
+                    phone: '0988-777-666',
+                    address: '新北市板橋區縣民大道'
+                },
+                payment_info: null,
+                tracking_number: null,
+                items: [{ ticket_name: '特區 Rock A - 10排 - 1號', price: 4800 }, { ticket_name: '特區 Rock A - 10排 - 2號', price: 4800 }]
+            }
         ];
 
         // 7. Sub-accounts (Settings)
@@ -146,6 +235,31 @@ class MockDatabase {
         }
     }
 
+    _generateMockTickets() {
+        // Create some tickets for the Jay Chou session (201)
+        const areas = this._generateAreas(201, 'DOME_JAY');
+
+        const statuses = ['on_shelf', 'off_shelf', 'sold'];
+
+        for (let i = 0; i < 30; i++) {
+            const area = areas[Math.floor(Math.random() * areas.length)];
+            const row = Math.floor(Math.random() * 20) + 1;
+            const seat = Math.floor(Math.random() * 100) + 1;
+
+            this.tickets.push({
+                id: `T${2025000 + i}`,
+                session_id: 201,
+                area_id: area.id,
+                area_name: area.name,
+                row: row,
+                seat: seat,
+                price: area.avgPrice, // Default price
+                status: statuses[Math.floor(Math.random() * statuses.length)],
+                quantity: 1
+            });
+        }
+    }
+
     // --- Methods ---
 
     getDashboardStats() {
@@ -156,10 +270,10 @@ class MockDatabase {
         const processingOrders = this.orders
             .filter(o => ['pending', 'shipping'].includes(o.status)).length;
 
-        // Mocking Active Listings count
-        const activeListings = 156;
+        // Mocking Active Tickets count
+        const activeTickets = 156;
 
-        return { totalRevenue, processingOrders, activeListings };
+        return { totalRevenue, processingOrders, activeTickets };
     }
 
     getEvents() {
@@ -182,10 +296,36 @@ class MockDatabase {
         return this.sessionAreas.filter(a => a.session_id === sessionId);
     }
 
-    addListing(listingData) {
+    getSessionTickets(sessionId) {
+        return this.tickets.filter(t => t.session_id === sessionId);
+    }
+
+    updateTicket(id, updates) {
+        const t = this.tickets.find(x => x.id === id);
+        if (t) {
+            Object.assign(t, updates);
+            return true;
+        }
+        return false;
+    }
+
+    deleteTicket(id) {
+        this.tickets = this.tickets.filter(t => t.id !== id);
+    }
+
+    updateOrder(id, updates) {
+        const order = this.orders.find(o => o.id === id);
+        if (order) {
+            Object.assign(order, updates);
+            return true;
+        }
+        return false;
+    }
+
+    addTicket(ticketData) {
         // Mock adding to DB
-        // listingData: { areaId, price, quantity, batchCode, ... }
-        console.log("Adding listing to DB:", listingData);
+        // ticketData: { areaId, price, quantity, batchCode, ... }
+        console.log("Adding ticket to DB:", ticketData);
         return true;
     }
 
@@ -223,7 +363,7 @@ function initDashboard() {
 
     document.getElementById('statRevenue').textContent = Utils.formatCurrency(stats.totalRevenue).replace('TWD', '$'); // Keep it simple with $ sign sometimes
     document.getElementById('statOrders').textContent = stats.processingOrders;
-    document.getElementById('statListings').textContent = stats.activeListings;
+    document.getElementById('statTickets').textContent = stats.activeTickets;
 
     const tableBody = document.getElementById('dashboardOrderList');
     if (tableBody) {

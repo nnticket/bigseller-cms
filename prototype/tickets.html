@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigSeller | 門票刊登</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            /* Classic Palette */
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --border: rgba(255, 255, 255, 0.08);
+            /* Subtle border */
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Global Scrollbar --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* --- Header --- */
+        .app-header {
+            height: 60px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+
+        /* --- Main Layout: 2 Columns --- */
+        .main-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            /* Fixed sidebar width */
+            overflow: hidden;
+        }
+
+        /* --- Sidebar: Text Only List --- */
+        .sidebar {
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-area {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.6rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        .event-tree {
+            flex: 1;
+            /* Critical for scrolling */
+            min-height: 0;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        /* Tree Items */
+        .group-details {
+            margin-bottom: 2px;
+        }
+
+        .tree-group-header {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            cursor: pointer;
+            list-style: none;
+            /* Hide default triangle */
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tree-group-header:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Custom Triangle */
+        .tree-group-header::-webkit-details-marker {
+            display: none;
+        }
+
+        .tree-group-header::after {
+            content: '›';
+            font-size: 1.2rem;
+            line-height: 1;
+            color: #64748b;
+            margin-left: auto;
+            transform: rotate(90deg);
+            transition: transform 0.2s;
+        }
+
+        details[open] .tree-group-header::after {
+            transform: rotate(-90deg);
+        }
+
+        .group-content {
+            padding-left: 0.5rem;
+            margin-top: 2px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            margin-left: 0.5rem;
+        }
+
+        .tree-item {
+            padding: 0.6rem 0.8rem;
+            margin: 1px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+
+
+        .tree-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: white;
+        }
+
+        .tree-item.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .tree-venue {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+
+        /* Integrated Right Panel */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-dark);
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top: Zone Selector (Grid View) */
+        .area-section {
+            width: 100%;
+            flex-shrink: 0;
+            background: #182030;
+            border-bottom: none;
+            padding: 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 20;
+        }
+
+        /* Horizontal Scrollable Grid */
+        .area-grid-wrapper {
+            width: 100%;
+            display: block;
+            /* Ensure it takes space */
+            margin-top: 0.5rem;
+        }
+
+        .area-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            /* Slightly smaller min-width to fit more */
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .area-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60px;
+            /* Ensure visual height */
+        }
+
+        .area-card:hover {
+            border-color: var(--primary);
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-1px);
+        }
+
+        .area-card.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Inspector Form Grid (2 Columns) */
+        .inspector-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* Split 50/50 */
+            gap: 2rem;
+            align-items: start;
+        }
+
+        /* On smaller screens, stack them */
+        @media (max-width: 1024px) {
+            .inspector-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        /* Bottom: Inspector Form */
+        .inspector-section {
+            flex: 1;
+            background: #182030;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            /* Fix: Ensure content stretches, don't center */
+            justify-content: flex-start;
+            /* Fix: Start from top */
+        }
+
+        .inspector-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            /* Force Vertical Stack */
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .field-group-title {
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .field-group-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            opacity: 0.5;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .classic-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .classic-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            outline: none;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .classic-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Submit Button */
+        .btn-submit-container {
+            position: sticky;
+            bottom: 0;
+            background: #182030;
+            padding: 1rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+            z-index: 10;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Toggle & Checkbox */
+        .pill-toggle {
+            display: inline-flex;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        .pill-toggle label {
+            padding: 0.5rem 1.2rem;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            margin: 0 !important;
+        }
+
+        .pill-toggle input:checked+span {
+            background: var(--panel-bg);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .consecutive-box {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .consecutive-box:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        /* Ticket Entry Styling */
+        .ticket-entry {
+            background: var(--bg-dark);
+            border: 1px solid #334155;
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .ticket-entry:hover {
+            border-color: #475569;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .ticket-notch {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            width: 12px;
+            height: 24px;
+            background: #182030;
+            /* Match container bg */
+            border-radius: 12px 0 0 12px;
+            border: 1px solid #334155;
+            border-right: none;
+            transform: translateY(-50%);
+        }
+
+        .ticket-dashed-line {
+            position: absolute;
+            right: 25%;
+            top: 10px;
+            bottom: 10px;
+            border-left: 2px dashed #334155;
+        }
+
+        /* Larger Checkbox */
+        .chk-lg {
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="text-xl font-bold tracking-tight mr-10">BigSeller</div>
+        <nav class="flex gap-2">
+            <a href="dashboard.html" class="nav-link">儀表板</a>
+            <a href="tickets.html" class="nav-link active">門票管理</a>
+            <a href="orders.html" class="nav-link">訂單管理</a>
+            <a href="settings.html" class="nav-link">賣家設定</a>
+        </nav>
+        <div class="ml-auto flex items-center gap-4">
+            <div class="text-sm text-gray-400">已登入: TicketMasterTW</div>
+        </div>
+    </header>
+
+    <div class="main-container">
+
+        <!-- Sidebar (Text Only) -->
+        <aside class="sidebar">
+            <div class="search-area">
+                <input type="text" id="eventSearch" class="search-input" placeholder="搜尋活動 (周杰倫)..."
+                    oninput="filterSidebar()">
+            </div>
+            <div id="eventTree" class="event-tree custom-scroll">
+                <!-- Injected JS -->
+            </div>
+        </aside>
+
+        <!-- Right Panel -->
+        <main class="right-panel">
+
+            <div id="emptyState" class="empty-placeholder">
+                <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122">
+                        </path>
+                    </svg>
+                </div>
+                <div>請選擇左側活動場次</div>
+            </div>
+
+            <!-- Integrated Content Wrapper -->
+            <div id="contentWrapper" style="display:none; flex-direction:column; height:100%;">
+
+                <!-- Scrollable Form Area -->
+                <div class="inspector-section" style="background:transparent;">
+                    <div class="inspector-scroll">
+
+                        <!-- Global Header (Now Part of Scroll Flow) -->
+                        <!-- Global Header (Now Part of Scroll Flow) -->
+                        <div class="section-header"
+                            style="background:transparent; z-index:30; padding-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:1.5rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="padding-right: 1rem;">
+                                    <h1 class="header-title" id="headerTitle"
+                                        style="font-size:1.5rem; line-height:1.2;">Event Title</h1>
+                                    <div class="header-meta mt-1 flex items-center gap-2">
+                                        <span id="headerTime"
+                                            class="bg-gray-800 px-2 py-0.5 rounded text-gray-300 text-xs">Time</span>
+                                        <span class="text-gray-600">|</span>
+                                        <span id="headerVenue" class="text-gray-400 text-xs">Venue</span>
+                                    </div>
+                                </div>
+                                <div style="text-align:right; flex-shrink:0;">
+                                    <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">Average
+                                        Price</div>
+                                    <span id="mktPrice"
+                                        style="font-size:1.5rem; font-family:monospace; color:white; font-weight:700;">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Management Header -->
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                <span>管理票券</span>
+                                <span id="ticketCountBadge"
+                                    class="bg-gray-700 text-xs px-2 py-1 rounded text-gray-300">0</span>
+                            </h2>
+                            <div class="flex gap-2">
+                                <button onclick="showListView()" id="btnViewList"
+                                    class="btn-outline active text-sm">列表模式</button>
+                                <button onclick="showAddView()" id="btnViewAdd"
+                                    class="btn-primary text-sm shadow-lg shadow-indigo-500/20">
+                                    + 新增票券
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- View 1: Ticket List Table -->
+                        <div id="viewList">
+                            <div class="glass-panel p-0 overflow-hidden border border-gray-700 rounded-lg">
+                                <table class="w-full text-left border-collapse text-sm">
+                                    <thead class="bg-gray-800 text-gray-400 font-medium">
+                                        <tr>
+                                            <th class="p-3 border-b border-gray-700">區域/座位</th>
+                                            <th class="p-3 border-b border-gray-700 text-right">價格 (Price)</th>
+                                            <th class="p-3 border-b border-gray-700 text-center">狀態</th>
+                                            <th class="p-3 border-b border-gray-700 text-right">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ticketListBody">
+                                        <!-- JS Injected -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- View 2: Add Form (Hidden by default) -->
+                        <div id="viewAdd" style="display:none;">
+                            <div class="mb-4">
+                                <button onclick="showListView()"
+                                    class="text-sm text-gray-400 hover:text-white flex items-center gap-1">
+                                    ← 返回列表
+                                </button>
+                            </div>
+
+                            <form onsubmit="submitTicket(event)">
+                                <!-- Group 1: Hidden Area Trigger (Logic Only) -->
+                                <div style="display:none;"></div>
+
+                                <!-- 2-Column Layout for Input Fields -->
+                                <div class="inspector-grid">
+
+                                    <!-- LEFT COLUMN: Seat Info -->
+                                    <div>
+                                        <div class="field-group h-full">
+                                            <div class="flex justify-between items-center mb-4">
+                                                <div class="field-group-title mb-0"
+                                                    style="margin-bottom:0; border:none;">座位資訊 (Seat Info)</div>
+                                                <button type="button" onclick="addSeatEntry()"
+                                                    class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded hover:bg-indigo-500/40">
+                                                    + 新增一組
+                                                </button>
+                                            </div>
+
+                                            <div id="seatEntriesContainer" class="flex flex-col gap-4">
+                                                <!-- Dynamic Entries -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- RIGHT COLUMN: Pricing & Details -->
+                                    <div>
+                                        <!-- ROI / Pricing -->
+                                        <div class="field-group">
+                                            <div class="field-group-title">價格參考 (Pricing Reference)</div>
+                                            <div class="text-sm text-gray-400 mb-2">
+                                                請在左側針對每一組座位設定價格。下方為當前區域的市場行情參考。
+                                            </div>
+                                        </div>
+
+                                        <!-- Details -->
+                                        <div class="field-group" style="margin-bottom:0;">
+                                            <div class="field-group-title">票券詳情 (Details)</div>
+                                            <div class="form-grid" style="margin-bottom:0;">
+                                                <div class="col-span-6">
+                                                    <div class="input-group">
+                                                        <label class="mb-3">票券類型</label>
+                                                        <div class="pill-toggle">
+                                                            <label>
+                                                                <input type="radio" name="tt" value="paper" checked
+                                                                    class="hidden">
+                                                                <span>紙本票 (Paper)</span>
+                                                            </label>
+                                                            <label>
+                                                                <input type="radio" name="tt" value="eticket"
+                                                                    class="hidden">
+                                                                <span>電子票 (E-Ticket)</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-span-6">
+                                                    <div class="input-group">
+                                                        <label class="mb-3">特殊標記</label>
+                                                        <div class="flex gap-4 mt-2">
+                                                            <label
+                                                                class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-white">
+                                                                <input type="checkbox"
+                                                                    class="accent-indigo-500 w-4 h-4">
+                                                                視線遮蔽
+                                                            </label>
+                                                            <label
+                                                                class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-white">
+                                                                <input type="checkbox"
+                                                                    class="accent-indigo-500 w-4 h-4">
+                                                                輪椅席
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> <!-- End Right Column -->
+                                </div> <!-- End inspector-grid -->
+
+                                <div class="btn-submit-container">
+                                    <button type="submit" class="btn-primary">立即刊登 (List Item)</button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div> <!-- End inspector-scroll -->
+                </div> <!-- End inspector-section -->
+            </div> <!-- End contentWrapper -->
+        </main>
+    </div>
+
+    <script src="js/utils.js?v=10"></script>
+    <script src="js/app.js?v=10"></script>
+    <script>
+        let currentSess = null;
+        let currentArea = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.db) {
+                console.log("DB Loaded with events:", window.db.getEvents().length);
+                renderSidebar();
+            }
+        });
+
+        function renderSidebar(filter = '') {
+            const tree = document.getElementById('eventTree');
+            tree.innerHTML = '';
+
+            const events = window.db.getEvents();
+            // Sort events by ID desc to see new ones first
+            events.sort((a, b) => b.id - a.id);
+
+            events.forEach(ev => {
+                const sessions = window.db.getSessions(ev.id);
+                const matches = sessions.filter(s =>
+                    ev.title.includes(filter) || s.venue.includes(filter)
+                );
+
+                if (matches.length > 0) {
+                    // Create Details/Summary for Accordion
+                    const details = document.createElement('details');
+                    details.className = 'group-details';
+
+                    // Open match if searching
+                    if (filter) details.open = true;
+
+                    const summary = document.createElement('summary');
+                    summary.className = 'tree-group-header';
+                    summary.innerHTML = `
+                        <span>${ev.title}</span>
+                        <span class="text-xs text-gray-400 ml-2 font-normal">(${matches.length})</span>
+                    `;
+                    details.appendChild(summary);
+
+                    const content = document.createElement('div');
+                    content.className = 'group-content';
+
+                    matches.forEach(sess => {
+                        const row = document.createElement('div');
+                        const dt = new Date(sess.session_time);
+                        const dStr = dt.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+                        const tStr = dt.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+
+                        row.className = 'tree-item';
+                        row.innerHTML = `
+                            <span class="font-mono text-gray-300 text-sm whitespace-nowrap mr-2">${dStr} ${tStr}</span>
+                            <span class="tree-venue truncate" title="${sess.venue}">${sess.venue}</span>
+                        `;
+                        row.onclick = () => selectSession(ev, sess, row);
+                        content.appendChild(row);
+                    });
+
+                    details.appendChild(content);
+                    tree.appendChild(details);
+                }
+            });
+        }
+
+        function filterSidebar() {
+            renderSidebar(document.getElementById('eventSearch').value);
+        }
+
+        function selectSession(ev, sess, el) {
+            currentSess = sess;
+            // UI Active
+            document.querySelectorAll('.tree-item').forEach(x => x.classList.remove('active'));
+            el.classList.add('active');
+
+            // Show Content
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('contentWrapper').style.display = 'flex';
+
+            // Headers
+            document.getElementById('headerTitle').textContent = ev.title;
+            const dt = new Date(sess.session_time);
+            document.getElementById('headerTime').textContent = dt.toLocaleString('zh-TW');
+            document.getElementById('headerVenue').textContent = sess.venue;
+
+            // Load Areas
+            renderAreas(sess.id);
+
+            // Render Ticket List
+            renderTicketList(sess.id);
+            showListView();
+        }
+
+        function showListView() {
+            document.getElementById('viewList').style.display = 'block';
+            document.getElementById('viewAdd').style.display = 'none';
+            document.getElementById('btnViewList').classList.add('bg-indigo-500/20', 'text-indigo-300'); // Active sytle mock
+            // In reality, toggle active class
+        }
+
+        function showAddView() {
+            document.getElementById('viewList').style.display = 'none';
+            document.getElementById('viewAdd').style.display = 'block';
+        }
+
+        function renderTicketList(sessId) {
+            const listBody = document.getElementById('ticketListBody');
+            listBody.innerHTML = '';
+
+            const tickets = window.db.getSessionTickets(sessId);
+            document.getElementById('ticketCountBadge').textContent = tickets.length;
+
+            if (tickets.length === 0) {
+                listBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500">此場次尚無票券。點擊右上角「新增票券」開始刊登。</td></tr>`;
+                return;
+            }
+
+            tickets.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/50 transition-colors border-b border-gray-700/50';
+
+                // Status Logic
+                let statusBadge = '';
+                let toggleChecked = '';
+                if (t.status === 'on_shelf') {
+                    statusBadge = `<span class="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs">上架中</span>`;
+                    toggleChecked = 'checked';
+                } else if (t.status === 'sold') {
+                    statusBadge = `<span class="bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded text-xs">已售出</span>`;
+                } else {
+                    statusBadge = `<span class="bg-gray-700 text-gray-400 px-2 py-0.5 rounded text-xs">下架中</span>`;
+                }
+
+                // Row/Seat Info
+                const seatInfo = `<div class="font-bold text-white">${t.area_name}</div>
+                                  <div class="text-xs text-gray-400 font-mono">${t.row}排 ${t.seat}號</div>`;
+
+                // Price Input (Quick Edit)
+                const priceInput = `<div class="flex items-center justify-end gap-1">
+                                        <span class="text-gray-500 text-xs">$</span>
+                                        <input type="number" 
+                                            class="bg-transparent border-b border-transparent focus:border-indigo-500 text-right w-20 text-sm text-gray-300 focus:text-white outline-none font-mono"
+                                            value="${t.price}"
+                                            onchange="updateTicketPrice('${t.id}', this.value)"
+                                        >
+                                    </div>`;
+
+                // Toggle Button (Only if not sold)
+                let actionBtn = '';
+                if (t.status !== 'sold') {
+                    actionBtn = `<label class="relative inline-flex items-center cursor-pointer">
+                                  <input type="checkbox" value="" class="sr-only peer" ${toggleChecked} onchange="toggleTicketStatus('${t.id}')">
+                                  <div class="w-9 h-5 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>`;
+                }
+
+                // Delete
+                const deleteBtn = `<button onclick="deleteTicket('${t.id}')" class="text-gray-500 hover:text-red-400 ml-3 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                   </button>`;
+
+                tr.innerHTML = `
+                    <td class="p-3">${seatInfo}</td>
+                    <td class="p-3">${priceInput}</td>
+                    <td class="p-3 text-center">${statusBadge}</td>
+                    <td class="p-3 text-right flex items-center justify-end">
+                        ${actionBtn}
+                        ${deleteBtn}
+                    </td>
+                `;
+                listBody.appendChild(tr);
+            });
+        }
+
+        function updateTicketPrice(id, newPrice) {
+            window.db.updateTicket(id, { price: parseInt(newPrice) });
+            // Optional: visual feedback
+        }
+
+        function toggleTicketStatus(id) {
+            const t = window.db.tickets.find(x => x.id === id);
+            if (t) {
+                const newStatus = t.status === 'on_shelf' ? 'off_shelf' : 'on_shelf';
+                window.db.updateTicket(id, { status: newStatus });
+                renderTicketList(t.session_id); // Re-render to update badge
+            }
+        }
+
+        function deleteTicket(id) {
+            if (confirm('確定要刪除此票券嗎？')) {
+                const t = window.db.tickets.find(x => x.id === id);
+                if (t) {
+                    const sessId = t.session_id;
+                    window.db.deleteTicket(id);
+                    renderTicketList(sessId);
+                }
+            }
+        }
+
+        function renderAreas(sessId) {
+            window.currentAvailableAreas = window.db.getSessionAreas(sessId);
+
+            // Note: Grid is removed per user request. 
+            // We just init the lists.
+
+            // Init with one empty entry
+            const container = document.getElementById('seatEntriesContainer');
+            container.innerHTML = '';
+            addSeatEntry();
+        }
+
+        // Renamed/Refactored to handle row interactions
+        function addSeatEntry(preselectedAreaId = null) {
+            const container = document.getElementById('seatEntriesContainer');
+
+            // Create Entry Structure with Ticket Style
+            const div = document.createElement('div');
+            div.className = 'ticket-entry seat-entry';
+            div.innerHTML = `
+                <button type="button" onclick="removeSeatEntry(this)"
+                    class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 shadow-lg"
+                    style="z-index:20;">&times;</button>
+                
+                <!-- Notch Effect -->
+                <div class="ticket-notch"></div>
+                
+                <div class="grid grid-cols-12 gap-4">
+                    <!-- Main Ticket Info (Left 75%) -->
+                    <div class="col-span-9 pr-6">
+                        <!-- Row 1: Area & Price -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">區域 (Area)</label>
+                                <select class="classic-input area-inp py-1 px-2 text-sm h-10 bg-gray-900">
+                                    <option value="" disabled selected>選擇區域...</option>
+                                </select>
+                            </div>
+                            <div>
+                               <label class="block text-xs text-green-400 mb-1">單價 (Price)</label>
+                                <input type="number" class="classic-input price-inp h-10 py-1 text-green-400 font-bold bg-gray-900" placeholder="$">
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Row/Seat -->
+                        <div class="grid grid-cols-12 gap-3 items-end">
+                            <div class="col-span-3">
+                                 <label class="block text-xs text-gray-500 mb-1">排 (Row)</label>
+                                 <input type="text" class="classic-input text-center font-mono font-bold row-inp h-10 py-1 bg-gray-900" placeholder="Row">
+                            </div>
+                            
+                            <div class="col-span-9">
+                                <label class="lbl-seat block text-xs text-gray-500 mb-1">起始座號</label>
+                                <input type="text" class="classic-input font-mono seat-inp h-10 py-1 bg-gray-900" placeholder="eg. 1" oninput="autoQty(this)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side Info (Right 25%) -->
+                    <div class="col-span-3 pl-4 flex flex-col justify-center border-l-2 border-dashed border-gray-700">
+                        <div class="mb-4">
+                            <label class="block text-xs text-gray-500 mb-1">數量 (Qty)</label>
+                            <input type="number" class="classic-input text-center font-bold qty-inp h-10 py-1 bg-gray-900" value="1" min="1">
+                        </div>
+                        
+                        <!-- Improved Checkbox -->
+                        <label class="flex items-center gap-2 cursor-pointer select-none bg-indigo-500/10 p-2 rounded border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors">
+                            <input type="checkbox" class="chk-lg consecutive-chk" checked onchange="toggleRowConsecutive(this)">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-indigo-400">連號 (Seq)</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            `;
+
+            // Populate Area
+            const select = div.querySelector('.area-inp');
+            if (window.currentAvailableAreas) {
+                window.currentAvailableAreas.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `${a.name} ($${a.avgPrice})`;
+                    select.appendChild(opt);
+                });
+            }
+            if (preselectedAreaId) {
+                select.value = preselectedAreaId;
+            }
+
+            container.appendChild(div);
+
+            if (preselectedAreaId) {
+                div.querySelector('.price-inp').focus();
+            }
+
+            // Init UI 
+            toggleRowConsecutive(div.querySelector('.consecutive-chk'));
+        }
+
+        function removeSeatEntry(btn) {
+            const container = document.getElementById('seatEntriesContainer');
+            // Allow removing even if it's the last one? Ideally, keep one empty.
+            // But if specific delete, just remove.
+            btn.closest('.seat-entry').remove();
+
+            // If empty, add a default one
+            if (container.children.length === 0) {
+                addSeatEntry();
+            }
+        }
+
+        function toggleRowConsecutive(chkEl) {
+            const entry = chkEl.closest('.seat-entry');
+            const isConsecutive = chkEl.checked;
+
+            const label = entry.querySelector('.lbl-seat');
+            const input = entry.querySelector('.seat-inp');
+
+            label.textContent = isConsecutive ? "起始座號" : "座號 (逗號分隔)";
+            input.placeholder = isConsecutive ? "eg. 1" : "1,3,5";
+        }
+
+        function autoQty(inputInfo) {
+            const val = inputInfo.value;
+            const entry = inputInfo.closest('.seat-entry');
+            const qtyInp = entry.querySelector('.qty-inp');
+            const isConsecutive = entry.querySelector('.consecutive-chk').checked;
+
+            if (!isConsecutive && val.includes(',')) {
+                const count = val.split(',').filter(x => x.trim()).length;
+                if (count > 0) qtyInp.value = count;
+            }
+        }
+
+        // Stub for meter (not used per row for simplicity, or could add later)
+        function updatePriceMeter(price) { }
+
+        function submitTicket(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+
+            // Collect info
+            const entries = [];
+            const rows = document.querySelectorAll('.seat-entry');
+            let isValid = true;
+
+            rows.forEach(row => {
+                const area = row.querySelector('.area-inp').value;
+                const price = row.querySelector('.price-inp').value;
+                const r = row.querySelector('.row-inp').value;
+                const s = row.querySelector('.seat-inp').value;
+                const q = row.querySelector('.qty-inp').value;
+
+                if (!area || !price || !q) {
+                    isValid = false;
+                    row.classList.add('border-red-500');
+                } else {
+                    row.classList.remove('border-red-500');
+                    row.classList.add('border-gray-700');
+                }
+
+                if (area && price) {
+                    entries.push({ area, price, row: r, seat: s, qty: q });
+                }
+            });
+
+            if (!isValid && entries.length === 0) {
+                alert("請至少填寫完整一筆資料 (Area, Price, Qty)");
+                return;
+            }
+
+            const old = btn.textContent;
+            btn.textContent = `正在增加 ${entries.length} 筆票券...`;
+            btn.disabled = true;
+
+            setTimeout(() => {
+                alert(`成功上架 ${entries.length} 筆資料！\n(Successfully listed ${entries.length} items)`);
+                btn.textContent = old;
+                btn.disabled = false;
+
+                // Reset to one empty
+                document.getElementById('seatEntriesContainer').innerHTML = '';
+                addSeatEntry();
+            }, 800);
+        }
+    </script>
+</body>
+
+</html>
