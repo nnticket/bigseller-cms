@@ -135,6 +135,7 @@
                             <th>活動場次 (Event)</th>
                             <th>買家</th>
                             <th class="text-right">總金額 (Total)</th>
+                            <th class="text-right text-green-400">預計收益 (Payout)</th>
                             <th class="text-center">狀態</th>
                             <th class="text-right">建立時間</th>
                         </tr>
@@ -191,12 +192,13 @@
                 : allOrders.filter(o => o.status === currentFilter);
 
             if (orders.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">尚無此狀態的訂單</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500">尚無此狀態的訂單</td></tr>`;
                 return;
             }
 
             orders.forEach(order => {
                 const statusInfo = Utils.getStatus(order.status);
+                const payout = Math.round(order.total_amount * 0.9); // 10% Platform Fee
 
                 const tr = document.createElement('tr');
                 tr.className = "cursor-pointer hover:bg-white/5 border-b border-gray-700/50";
@@ -215,6 +217,7 @@
                         <div class="text-xs text-gray-500">${order.buyer_id || ''}</div>
                     </td>
                     <td class="p-4 align-top text-right font-mono text-white">${Utils.formatCurrency(order.total_amount)}</td>
+                    <td class="p-4 align-top text-right font-mono text-green-400 font-bold">${Utils.formatCurrency(payout)}</td>
                     <td class="p-4 align-top text-center"><span class="status-badge" style="background:${statusInfo.color}20; color:${statusInfo.color}">${statusInfo.text}</span></td>
                     <td class="p-4 align-top text-right text-gray-400 text-sm font-mono">${order.created_at.split(' ')[0]}</td>
                 `;
@@ -262,7 +265,7 @@
                 const payment = order.payment_info || { method: '--', transaction_id: '--' };
 
                 detailTr.innerHTML = `
-                    <td colspan="6" class="p-6">
+                    <td colspan="7" class="p-6">
                         <div class="detail-grid">
                             <!-- Column 1: Recipient -->
                             <div class="detail-card">
@@ -280,6 +283,10 @@
                                 <div class="detail-text">
                                     <div class="mb-2"><span class="text-gray-500 text-xs block">付款方式</span> ${payment.method}</div>
                                     <div><span class="text-gray-500 text-xs block">金流單號</span> <span class="font-mono text-sm">${payment.transaction_id}</span></div>
+                                    <div class="mt-4 pt-2 border-t border-gray-700">
+                                         <span class="text-gray-500 text-xs block">預計收益 (90%)</span>
+                                         <span class="font-mono text-xl text-green-400 font-bold">${Utils.formatCurrency(payout)}</span>
+                                    </div>
                                 </div>
                             </div>
 
