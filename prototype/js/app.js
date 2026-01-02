@@ -7,9 +7,15 @@ class MockDatabase {
     }
 
     initData() {
-        // 1. Users (Sellers)
+        // 1. Members (Buyers)
+        this.members = [
+            { id: 1001, username: 'user001', real_name: '王小明' },
+            { id: 1002, username: 'user002', real_name: '陳大文' }
+        ];
+
+        // 2. Sellers
         this.sellers = [
-            { id: 1, username: 'TicketMasterTW', real_name: '台灣票務大王', balance: 0 }
+            { id: 1, username: 'TicketMasterTW', shop_name: '台灣票務大王', status: 'active' }
         ];
 
         // 3. Events & Sessions
@@ -156,7 +162,11 @@ class MockDatabase {
                     transaction_id: 'TXN_CC_556677'
                 },
                 tracking_number: null,
-                items: [{ ticket_name: '特一區 Vip - 1排 - 8號', price: 6000 }, { ticket_name: '特一區 Vip - 1排 - 9號', price: 6000 }]
+                items: [{ ticket_name: '特一區 Vip - 1排 - 8號', price: 6000 }, { ticket_name: '特一區 Vip - 1排 - 9號', price: 6000 }],
+                logs: [
+                    { status: 'created', time: '2025-12-31 11:20', operator: 'System' },
+                    { status: 'paid', time: '2025-12-31 11:25', operator: 'System' }
+                ]
             },
             {
                 id: 'ORD-2025-010',
@@ -178,7 +188,11 @@ class MockDatabase {
                     transaction_id: 'TXN_ATM_112233'
                 },
                 tracking_number: 'TRK-FINISHED-001',
-                items: [{ ticket_name: '搖滾區 Rock - 300號', price: 4200 }]
+                items: [{ ticket_name: '搖滾區 Rock - 300號', price: 4200 }],
+                logs: [
+                    { status: 'created', time: '2025-12-28 10:00', operator: 'System' },
+                    { status: 'completed', time: '2025-12-28 10:05', operator: 'System' }
+                ]
             },
             {
                 id: 'ORD-2025-009',
@@ -197,7 +211,11 @@ class MockDatabase {
                 },
                 payment_info: null,
                 tracking_number: null,
-                items: [{ ticket_name: '特區 Rock A - 10排 - 1號', price: 4800 }, { ticket_name: '特區 Rock A - 10排 - 2號', price: 4800 }]
+                items: [{ ticket_name: '特區 Rock A - 10排 - 1號', price: 4800 }, { ticket_name: '特區 Rock A - 10排 - 2號', price: 4800 }],
+                logs: [
+                    { status: 'created', time: '2025-12-31 17:10', operator: 'System' },
+                    { status: 'pending', time: '2025-12-31 17:10', operator: 'System' }
+                ]
             }
         ];
 
@@ -236,28 +254,40 @@ class MockDatabase {
     }
 
     _generateMockTickets() {
-        // Create some tickets for the Jay Chou session (201)
-        const areas = this._generateAreas(201, 'DOME_JAY');
+        const targetSessions = [
+            { id: 201, event_id: 101, type: 'DOME_JAY' },     // Jay Chou
+            { id: 204, event_id: 102, type: 'ARENA_AMEI' },   // aMEI
+            { id: 207, event_id: 103, type: 'STADIUM' }       // Maroon 5
+        ];
 
-        const statuses = ['on_shelf', 'off_shelf', 'sold'];
+        const statuses = ['on_shelf', 'on_shelf', 'on_shelf', 'off_shelf', 'sold', 'draft'];
 
-        for (let i = 0; i < 30; i++) {
-            const area = areas[Math.floor(Math.random() * areas.length)];
-            const row = Math.floor(Math.random() * 20) + 1;
-            const seat = Math.floor(Math.random() * 100) + 1;
+        targetSessions.forEach(sess => {
+            const areas = this._generateAreas(sess.id, sess.type);
+            // Generate ~12 tickets per session
+            for (let i = 0; i < 12; i++) {
+                const area = areas[Math.floor(Math.random() * areas.length)];
+                const row = Math.floor(Math.random() * 20) + 1;
+                const seat = Math.floor(Math.random() * 100) + 1;
+                const status = statuses[Math.floor(Math.random() * statuses.length)];
 
-            this.tickets.push({
-                id: `T${2025000 + i}`,
-                session_id: 201,
-                area_id: area.id,
-                area_name: area.name,
-                row: row,
-                seat: seat,
-                price: area.avgPrice, // Default price
-                status: statuses[Math.floor(Math.random() * statuses.length)],
-                quantity: 1
-            });
-        }
+                // Randomize price slightly around average
+                let finalPrice = area.avgPrice + (Math.floor(Math.random() * 5) - 2) * 100;
+
+                this.tickets.push({
+                    id: `T${2025000 + this.tickets.length + 1}`,
+                    event_id: sess.event_id,
+                    session_id: sess.id,
+                    area_id: area.id,
+                    area_name: area.name,
+                    row: row,
+                    seat: seat,
+                    price: finalPrice,
+                    status: status,
+                    quantity: 1
+                });
+            }
+        });
     }
 
     // --- Methods ---
@@ -300,6 +330,10 @@ class MockDatabase {
         return this.tickets.filter(t => t.session_id === sessionId);
     }
 
+    getAllTickets() {
+        return this.tickets;
+    }
+
     updateTicket(id, updates) {
         const t = this.tickets.find(x => x.id === id);
         if (t) {
@@ -316,6 +350,18 @@ class MockDatabase {
     updateOrder(id, updates) {
         const order = this.orders.find(o => o.id === id);
         if (order) {
+            // Check for status change
+            if (updates.status && updates.status !== order.status) {
+                // Initialize logs if missing
+                if (!order.logs) order.logs = [];
+
+                order.logs.push({
+                    status: updates.status,
+                    time: new Date().toISOString(), // Use format compatible with UI
+                    operator: 'Seller' // Default operator
+                });
+            }
+
             Object.assign(order, updates);
             return true;
         }
@@ -327,6 +373,21 @@ class MockDatabase {
         // ticketData: { areaId, price, quantity, batchCode, ... }
         console.log("Adding ticket to DB:", ticketData);
         return true;
+    }
+
+    // --- Registration ---
+    registerSeller(data) {
+        const newId = this.sellers.length + 1;
+        const newSeller = {
+            id: newId,
+            username: data.username,
+            shop_name: data.shopName,
+            status: 'pending', // Default pending
+            created_at: new Date().toISOString()
+        };
+        this.sellers.push(newSeller);
+        console.log("New Seller Application:", newSeller);
+        return newSeller;
     }
 
     // --- Settings Methods ---

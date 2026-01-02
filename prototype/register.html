@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigSeller | 賣家申請註冊</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 500px;
+            padding: 2.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 1rem;
+        }
+
+        .auth-btn:hover {
+            opacity: 0.9;
+        }
+
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            display: none;
+        }
+
+        .success-modal {
+            background: #1e293b;
+            padding: 2.5rem;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+            border: 1px solid var(--border);
+        }
+
+        .check-icon {
+            width: 60px;
+            height: 60px;
+            background: #22c55e;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 1.5rem auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-card">
+        <div class="text-center mb-8">
+            <div class="logo">BigSeller</div>
+            <h2 class="text-2xl font-bold text-white mt-2">申請成為賣家</h2>
+            <p class="text-gray-400 text-sm mt-2">加入我們的平台，開始銷售您的票券</p>
+        </div>
+
+        <form id="registerForm" onsubmit="handleRegister(event)">
+            <!-- Account Info -->
+            <div class="flex gap-4">
+                <div class="form-group flex-1">
+                    <label class="form-label">使用者名稱 (Username)</label>
+                    <input type="text" class="classic-input w-full" required placeholder="設定您的帳號">
+                </div>
+                <div class="form-group flex-1">
+                    <label class="form-label">密碼 (Password)</label>
+                    <input type="password" class="classic-input w-full" required placeholder="設定密碼">
+                </div>
+            </div>
+
+            <!-- Shop Info -->
+            <div class="form-group">
+                <label class="form-label">賣場名稱 (Shop Name)</label>
+                <input type="text" class="classic-input w-full" required placeholder="顯示給買家的賣場名稱">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">公司/個人名稱 (Legal Name)</label>
+                <input type="text" class="classic-input w-full" required placeholder="公司全名或個人真實姓名">
+            </div>
+
+            <!-- Contact -->
+            <div class="flex gap-4">
+                <div class="form-group flex-1">
+                    <label class="form-label">聯絡人 (Contact Person)</label>
+                    <input type="text" class="classic-input w-full" required placeholder="聯絡窗口姓名">
+                </div>
+                <div class="form-group flex-1">
+                    <label class="form-label">聯絡電話 (Phone)</label>
+                    <input type="tel" class="classic-input w-full" required placeholder="手機或市話">
+                </div>
+            </div>
+
+            <button type="submit" class="auth-btn">提交申請 (Submit Application)</button>
+        </form>
+
+        <div class="mt-6 text-center text-sm text-gray-400">
+            已有帳號？ <a href="login.html" class="text-indigo-400 hover:text-white">登入賣家中心</a>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successOverlay" class="success-overlay">
+        <div class="success-modal">
+            <div class="check-icon">✓</div>
+            <h3 class="text-xl font-bold text-white mb-2">申請已送出！</h3>
+            <p class="text-gray-400 mb-6">您的賣家帳號目前處於「待審核 (Pending)」狀態。<br>平台管理員審核通過後，您將收到啟用通知。</p>
+            <a href="login.html" class="btn-primary py-2 px-6">返回登入頁</a>
+        </div>
+    </div>
+
+    <script>
+        function handleRegister(e) {
+            e.preventDefault();
+
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+
+            btn.disabled = true;
+            btn.textContent = "傳送資料中...";
+
+            // Simulation
+            setTimeout(() => {
+                const form = document.getElementById('registerForm');
+                const formData = {
+                    username: form.querySelector('input[type="text"]').value,
+                    shopName: form.querySelectorAll('input[type="text"]')[1].value
+                };
+
+                console.log("Registered:", formData);
+
+                // Show Success
+                document.getElementById('successOverlay').style.display = 'flex';
+
+            }, 1000);
+        }
+    </script>
+
+</body>
+
+</html>

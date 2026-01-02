@@ -573,6 +573,15 @@
                                     class="bg-gray-700 text-xs px-2 py-1 rounded text-gray-300">0</span>
                             </h2>
                             <div class="flex gap-2">
+                                <button id="btnSaveChanges" onclick="saveChanges()"
+                                    class="hidden flex items-center gap-2 bg-yellow-600 hover:bg-yellow-500 text-white text-sm px-3 py-1.5 rounded shadow-lg transition-all animate-pulse">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
+                                        </path>
+                                    </svg>
+                                    <span>儲存變更</span>
+                                </button>
                                 <button onclick="showListView()" id="btnViewList"
                                     class="btn-outline active text-sm">列表模式</button>
                                 <button onclick="showAddView()" id="btnViewAdd"
@@ -588,10 +597,11 @@
                                 <table class="w-full text-left border-collapse text-sm">
                                     <thead class="bg-gray-800 text-gray-400 font-medium">
                                         <tr>
+                                            <th class="p-3 border-b border-gray-700">活動/場次 (Event)</th>
                                             <th class="p-3 border-b border-gray-700">區域/座位</th>
+                                            <th class="p-3 border-b border-gray-700 text-center">數量 (Qty)</th>
                                             <th class="p-3 border-b border-gray-700 text-right">價格 (Price)</th>
                                             <th class="p-3 border-b border-gray-700 text-center">狀態</th>
-                                            <th class="p-3 border-b border-gray-700 text-right">操作</th>
                                         </tr>
                                     </thead>
                                     <tbody id="ticketListBody">
@@ -712,6 +722,16 @@
             if (window.db) {
                 console.log("DB Loaded with events:", window.db.getEvents().length);
                 renderSidebar();
+
+                // User Request: Show list immediately
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('contentWrapper').style.display = 'flex';
+                document.getElementById('headerTitle').textContent = "所有票券總覽 (All Tickets)";
+                document.getElementById('headerTime').style.display = 'none'; // Hide generic time
+                document.getElementById('headerVenue').style.display = 'none'; // Hide generic venue
+
+                renderTicketList(); // Load all
+                showListView();
             }
         });
 
@@ -800,24 +820,39 @@
         function showListView() {
             document.getElementById('viewList').style.display = 'block';
             document.getElementById('viewAdd').style.display = 'none';
-            document.getElementById('btnViewList').classList.add('bg-indigo-500/20', 'text-indigo-300'); // Active sytle mock
-            // In reality, toggle active class
+            document.getElementById('btnViewList').classList.add('bg-indigo-500/20', 'text-indigo-300');
+            document.getElementById('btnViewAdd').classList.remove('bg-indigo-500/20', 'text-indigo-300');
         }
 
         function showAddView() {
             document.getElementById('viewList').style.display = 'none';
             document.getElementById('viewAdd').style.display = 'block';
+            document.getElementById('btnViewList').classList.remove('bg-indigo-500/20', 'text-indigo-300');
+            // document.getElementById('btnViewAdd').classList.add('bg-indigo-500/20', 'text-indigo-300'); // Primary btn style
         }
 
-        function renderTicketList(sessId) {
+        function renderTicketList(sessId = null) {
             const listBody = document.getElementById('ticketListBody');
             listBody.innerHTML = '';
 
-            const tickets = window.db.getSessionTickets(sessId);
+            let tickets = [];
+            if (sessId) {
+                tickets = window.db.getSessionTickets(sessId);
+            } else {
+                tickets = window.db.getAllTickets();
+            }
+
+            // Sort by status (on_shelf first) then ID
+            tickets.sort((a, b) => {
+                if (a.status === 'on_shelf' && b.status !== 'on_shelf') return -1;
+                if (a.status !== 'on_shelf' && b.status === 'on_shelf') return 1;
+                return b.id.localeCompare(a.id);
+            });
+
             document.getElementById('ticketCountBadge').textContent = tickets.length;
 
             if (tickets.length === 0) {
-                listBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500">此場次尚無票券。點擊右上角「新增票券」開始刊登。</td></tr>`;
+                listBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">尚無票券。點擊右上角「新增票券」開始刊登。</td></tr>`;
                 return;
             }
 
@@ -825,21 +860,66 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-800/50 transition-colors border-b border-gray-700/50';
 
-                // Status Logic
-                let statusBadge = '';
-                let toggleChecked = '';
-                if (t.status === 'on_shelf') {
-                    statusBadge = `<span class="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs">上架中</span>`;
-                    toggleChecked = 'checked';
-                } else if (t.status === 'sold') {
-                    statusBadge = `<span class="bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded text-xs">已售出</span>`;
+                // Resolve Event/Session Info
+                // Ideally this data is joined, but we look it up
+                const sess = window.db.sessions.find(s => s.id === t.session_id);
+                const ev = sess ? window.db.events.find(e => e.id === sess.event_id) : null;
+
+                const eventInfo = ev ? `<div class="font-bold text-white text-sm line-clamp-1" title="${ev.title}">${ev.title}</div>
+                                        <div class="text-xs text-gray-400 font-mono">
+                                            ${new Date(sess.session_time).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 
+                                            @ ${sess.venue}
+                                        </div>` : '<span class="text-gray-500">Unknown</span>';
+
+                // Status Logic (Radio Toggle)
+                let statusControl = '';
+                if (t.status === 'sold') {
+                    statusControl = `<span class="bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded text-xs">已售出 (Sold)</span>`;
                 } else {
-                    statusBadge = `<span class="bg-gray-700 text-gray-400 px-2 py-0.5 rounded text-xs">下架中</span>`;
+                    const isOn = t.status === 'on_shelf';
+
+                    // Base classes
+                    const containerClass = "pill-toggle inline-flex bg-gray-900 rounded-lg p-1 border border-gray-700/50 shadow-inner";
+                    const labelBase = "cursor-pointer px-3 py-1.5 text-xs rounded-md transition-all font-medium flex items-center gap-1.5 select-none";
+
+                    // Active/Inactive state classes
+                    const onClass = isOn
+                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/50 ring-1 ring-emerald-500/50"
+                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800";
+
+                    const offClass = !isOn
+                        ? "bg-rose-600 text-white shadow-lg shadow-rose-900/50 ring-1 ring-rose-500/50"
+                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800";
+
+                    statusControl = `
+                        <div class="${containerClass}">
+                            <label class="status-lbl-on ${labelBase} ${onClass}">
+                                <input type="radio" name="status-${t.id}" value="on_shelf" class="hidden" ${isOn ? 'checked' : ''} onchange="updateTicketStatus('${t.id}', 'on_shelf', this)">
+                                <span class="w-1.5 h-1.5 rounded-full ${isOn ? 'bg-white' : 'bg-gray-600'} transition-colors dot-indicator"></span>
+                                <span>上架</span>
+                            </label>
+                            <label class="status-lbl-off ${labelBase} ${offClass}">
+                                <input type="radio" name="status-${t.id}" value="off_shelf" class="hidden" ${!isOn ? 'checked' : ''} onchange="updateTicketStatus('${t.id}', 'off_shelf', this)">
+                                <span class="w-1.5 h-1.5 rounded-full ${!isOn ? 'bg-white' : 'bg-gray-600'} transition-colors dot-indicator"></span>
+                                <span>下架</span>
+                            </label>
+                        </div>
+                    `;
                 }
 
                 // Row/Seat Info
-                const seatInfo = `<div class="font-bold text-white">${t.area_name}</div>
+                const seatInfo = `<div class="font-bold text-gray-200">${t.area_name}</div>
                                   <div class="text-xs text-gray-400 font-mono">${t.row}排 ${t.seat}號</div>`;
+
+                // Quantity Input
+                const quantityInput = `<div class="flex items-center justify-center">
+                                        <input type="number" 
+                                            class="bg-transparent border-b border-transparent focus:border-indigo-500 text-center w-16 text-sm text-gray-300 focus:text-white outline-none font-mono"
+                                            value="${t.quantity || 1}"
+                                            min="0"
+                                            onchange="updateTicketQuantity('${t.id}', this.value, this)"
+                                        >
+                                    </div>`;
 
                 // Price Input (Quick Edit)
                 const priceInput = `<div class="flex items-center justify-end gap-1">
@@ -847,69 +927,139 @@
                                         <input type="number" 
                                             class="bg-transparent border-b border-transparent focus:border-indigo-500 text-right w-20 text-sm text-gray-300 focus:text-white outline-none font-mono"
                                             value="${t.price}"
-                                            onchange="updateTicketPrice('${t.id}', this.value)"
+                                            onchange="updateTicketPrice('${t.id}', this.value, this)"
                                         >
                                     </div>`;
 
-                // Toggle Button (Only if not sold)
-                let actionBtn = '';
-                if (t.status !== 'sold') {
-                    actionBtn = `<label class="relative inline-flex items-center cursor-pointer">
-                                  <input type="checkbox" value="" class="sr-only peer" ${toggleChecked} onchange="toggleTicketStatus('${t.id}')">
-                                  <div class="w-9 h-5 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                                </label>`;
-                }
-
-                // Delete
-                const deleteBtn = `<button onclick="deleteTicket('${t.id}')" class="text-gray-500 hover:text-red-400 ml-3 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                   </button>`;
-
                 tr.innerHTML = `
+                    <td class="p-3 w-1/3">${eventInfo}</td>
                     <td class="p-3">${seatInfo}</td>
+                    <td class="p-3 text-center">${quantityInput}</td>
                     <td class="p-3">${priceInput}</td>
-                    <td class="p-3 text-center">${statusBadge}</td>
-                    <td class="p-3 text-right flex items-center justify-end">
-                        ${actionBtn}
-                        ${deleteBtn}
-                    </td>
+                    <td class="p-3 text-center">${statusControl}</td>
                 `;
                 listBody.appendChild(tr);
             });
         }
 
-        function updateTicketPrice(id, newPrice) {
-            window.db.updateTicket(id, { price: parseInt(newPrice) });
-            // Optional: visual feedback
+        // Batch Update Logic
+        let pendingChanges = new Map();
+
+        function trackChange(id, field, value, inputEl) {
+            if (!pendingChanges.has(id)) {
+                pendingChanges.set(id, {});
+            }
+            const changes = pendingChanges.get(id);
+            changes[field] = value;
+
+            // Visual Feedback
+            inputEl.classList.add('bg-yellow-900/40', 'text-yellow-200', 'border-yellow-500');
+            inputEl.classList.remove('border-transparent');
+
+            // Show Save Button
+            const btn = document.getElementById('btnSaveChanges');
+            btn.classList.remove('hidden');
+            btn.previousElementSibling?.classList.add('hidden'); // Optional: hide other buttons if needed, or just show
+
+            // Update Text
+            btn.innerHTML = `
+                <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                <span>儲存 ${pendingChanges.size} 筆變更</span>
+            `;
         }
 
-        function toggleTicketStatus(id) {
-            const t = window.db.tickets.find(x => x.id === id);
-            if (t) {
-                const newStatus = t.status === 'on_shelf' ? 'off_shelf' : 'on_shelf';
-                window.db.updateTicket(id, { status: newStatus });
-                renderTicketList(t.session_id); // Re-render to update badge
+        function updateTicketPrice(id, newPrice, inputEl) {
+            trackChange(id, 'price', parseInt(newPrice), inputEl);
+        }
+
+        function updateTicketQuantity(id, newQty, inputEl) {
+            let qty = parseInt(newQty);
+            if (qty < 0) qty = 0;
+            trackChange(id, 'quantity', qty, inputEl);
+        }
+
+        async function saveChanges() {
+            const btn = document.getElementById('btnSaveChanges');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span>儲存中...</span>`;
+
+            // Mock Network Delay
+            await new Promise(r => setTimeout(r, 600));
+
+            // Commit Logic
+            pendingChanges.forEach((changes, id) => {
+                window.db.updateTicket(id, changes);
+            });
+
+            // Cleanup
+            pendingChanges.clear();
+
+            // Visual Reset
+            document.querySelectorAll('.bg-yellow-900\\/40').forEach(el => {
+                el.classList.remove('bg-yellow-900/40', 'text-yellow-200', 'border-yellow-500');
+                el.classList.add('border-transparent');
+            });
+
+            btn.classList.add('hidden');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+
+            // Re-render to ensure clean state
+            renderTicketList(currentSess ? currentSess.id : null);
+
+            // Toast
+            alert("變更已成功儲存！");
+        }
+
+        function updateTicketStatus(id, newStatus, inputEl) {
+            // Batch tracking
+            trackChange(id, 'status', newStatus, inputEl);
+
+            // UI Toggle Logic
+            const wrapper = inputEl.closest('.pill-toggle');
+            if (!wrapper) return;
+
+            const lblOn = wrapper.querySelector('.status-lbl-on');
+            const lblOff = wrapper.querySelector('.status-lbl-off');
+            const dotOn = lblOn.querySelector('.dot-indicator');
+            const dotOff = lblOff.querySelector('.dot-indicator');
+
+            // Reset Base
+            const baseClass = "cursor-pointer px-3 py-1.5 text-xs rounded-md transition-all font-medium flex items-center gap-1.5 select-none";
+            const inactiveClass = "text-gray-500 hover:text-gray-300 hover:bg-gray-800";
+
+            // Active Styles
+            const activeOnClass = "bg-emerald-600 text-white shadow-lg shadow-emerald-900/50 ring-1 ring-emerald-500/50";
+            const activeOffClass = "bg-rose-600 text-white shadow-lg shadow-rose-900/50 ring-1 ring-rose-500/50";
+
+            if (newStatus === 'on_shelf') {
+                // Active ON
+                lblOn.className = `status-lbl-on ${baseClass} ${activeOnClass}`;
+                lblOff.className = `status-lbl-off ${baseClass} ${inactiveClass}`;
+
+                dotOn.classList.remove('bg-gray-600');
+                dotOn.classList.add('bg-white');
+
+                dotOff.classList.remove('bg-white');
+                dotOff.classList.add('bg-gray-600');
+            } else {
+                // Active OFF
+                lblOn.className = `status-lbl-on ${baseClass} ${inactiveClass}`;
+                lblOff.className = `status-lbl-off ${baseClass} ${activeOffClass}`;
+
+                dotOn.classList.remove('bg-white');
+                dotOn.classList.add('bg-gray-600');
+
+                dotOff.classList.remove('bg-gray-600');
+                dotOff.classList.add('bg-white');
             }
         }
 
-        function deleteTicket(id) {
-            if (confirm('確定要刪除此票券嗎？')) {
-                const t = window.db.tickets.find(x => x.id === id);
-                if (t) {
-                    const sessId = t.session_id;
-                    window.db.deleteTicket(id);
-                    renderTicketList(sessId);
-                }
-            }
-        }
+
 
         function renderAreas(sessId) {
             window.currentAvailableAreas = window.db.getSessionAreas(sessId);
-
-            // Note: Grid is removed per user request. 
-            // We just init the lists.
-
-            // Init with one empty entry
             const container = document.getElementById('seatEntriesContainer');
             container.innerHTML = '';
             addSeatEntry();
@@ -988,7 +1138,14 @@
                     opt.textContent = `${a.name} ($${a.avgPrice})`;
                     select.appendChild(opt);
                 });
+            } else {
+                // No areas if no session selected
+                const opt = document.createElement('option');
+                opt.textContent = "請先選擇左側場次";
+                select.appendChild(opt);
+                select.disabled = true;
             }
+
             if (preselectedAreaId) {
                 select.value = preselectedAreaId;
             }
@@ -1043,6 +1200,12 @@
 
         function submitTicket(e) {
             e.preventDefault();
+            // Ensure we have a session
+            if (!currentSess) {
+                alert("請先從左側列表選擇一個場次");
+                return;
+            }
+
             const btn = e.target.querySelector('button[type="submit"]');
 
             // Collect info
@@ -1087,6 +1250,11 @@
                 // Reset to one empty
                 document.getElementById('seatEntriesContainer').innerHTML = '';
                 addSeatEntry();
+
+                // Switch back to list and see new items
+                showListView();
+                renderTicketList(currentSess.id);
+
             }, 800);
         }
     </script>
