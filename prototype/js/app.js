@@ -110,6 +110,8 @@ class MockDatabase {
                     phone: '0912-345-678',
                     address: '台北市信義區信義路五段7號 (Taipei 101)'
                 },
+                payment_status: 'paid',
+                shipping_status: 'preparing',
                 payment_info: {
                     method: 'Credit Card',
                     transaction_id: 'TXN_1234567890'
@@ -125,7 +127,8 @@ class MockDatabase {
                 buyer_name: '陳大文',
                 buyer_id: 'USER_002',
                 total_amount: 3800,
-                status: 'shipping', // Shipped
+                payment_status: 'paid',
+                shipping_status: 'shipped',
                 created_at: '2025-12-31 14:15',
                 event_title: 'aMEI ASMR MAX 演唱會 - 高雄站',
                 session_time: '2025-12-25 19:30',
@@ -147,7 +150,8 @@ class MockDatabase {
                 buyer_name: '張惠妹粉',
                 buyer_id: 'USER_005',
                 total_amount: 12000,
-                status: 'paid',
+                payment_status: 'paid',
+                shipping_status: 'preparing',
                 created_at: '2025-12-31 11:20',
                 event_title: 'aMEI ASMR MAX 演唱會 - 高雄站',
                 session_time: '2025-12-31 21:30',
@@ -173,7 +177,8 @@ class MockDatabase {
                 buyer_name: 'Charlie',
                 buyer_id: 'USER_010',
                 total_amount: 4200,
-                status: 'completed',
+                payment_status: 'paid',
+                shipping_status: 'delivered',
                 created_at: '2025-12-28 10:00',
                 event_title: 'Maroon 5 Asia Tour 2025',
                 session_time: '2025-02-14 20:00',
@@ -191,7 +196,7 @@ class MockDatabase {
                 items: [{ ticket_name: '搖滾區 Rock - 300號', price: 4200 }],
                 logs: [
                     { status: 'created', time: '2025-12-28 10:00', operator: 'System' },
-                    { status: 'completed', time: '2025-12-28 10:05', operator: 'System' }
+                    { status: 'delivered', time: '2025-12-28 10:05', operator: 'System' }
                 ]
             },
             {
@@ -199,7 +204,8 @@ class MockDatabase {
                 buyer_name: 'Bob',
                 buyer_id: 'USER_009',
                 total_amount: 9600,
-                status: 'pending',
+                payment_status: 'unpaid',
+                shipping_status: 'none',
                 created_at: '2025-12-31 17:10',
                 event_title: '周杰倫嘉年華世界巡迴演唱會',
                 session_time: '2026-01-01 19:30',
@@ -350,17 +356,21 @@ class MockDatabase {
     updateOrder(id, updates) {
         const order = this.orders.find(o => o.id === id);
         if (order) {
-            // Check for status change
-            if (updates.status && updates.status !== order.status) {
-                // Initialize logs if missing
-                if (!order.logs) order.logs = [];
+            // Check for status changes
+            const checkStatus = (field, type) => {
+                if (updates[field] && updates[field] !== order[field]) {
+                    if (!order.logs) order.logs = [];
+                    order.logs.push({
+                        status_type: type,
+                        status: updates[field],
+                        time: new Date().toISOString(),
+                        operator: 'Seller'
+                    });
+                }
+            };
 
-                order.logs.push({
-                    status: updates.status,
-                    time: new Date().toISOString(), // Use format compatible with UI
-                    operator: 'Seller' // Default operator
-                });
-            }
+            checkStatus('payment_status', 'payment');
+            checkStatus('shipping_status', 'shipping');
 
             Object.assign(order, updates);
             return true;

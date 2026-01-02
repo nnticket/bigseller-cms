@@ -55,9 +55,9 @@
         /* Detail View */
         .detail-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 2rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.5rem;
             padding-bottom: 1.5rem;
             border-bottom: 1px dashed var(--border);
         }
@@ -136,7 +136,8 @@
                             <th>買家</th>
                             <th class="text-right">總金額 (Total)</th>
                             <th class="text-right text-green-400">預計收益 (Payout)</th>
-                            <th class="text-center">狀態</th>
+                            <th class="text-center">付款狀態</th>
+                            <th class="text-center">運送狀態</th>
                             <th class="text-right">建立時間</th>
                         </tr>
                     </thead>
@@ -180,16 +181,25 @@
 
             const allOrders = window.db.getAllOrders();
 
+            // Filter Logic Helper
+            const checkFilter = (o, filter) => {
+                if (filter === 'all') return true;
+                if (filter === 'pending') return o.payment_status === 'unpaid' && o.payment_status !== 'cancelled';
+                if (filter === 'paid') return o.payment_status === 'paid' && (o.shipping_status === 'preparing' || o.shipping_status === 'none');
+                if (filter === 'shipping') return o.shipping_status === 'shipped';
+                if (filter === 'completed') return o.shipping_status === 'delivered';
+                if (filter === 'cancelled') return o.payment_status === 'cancelled';
+                return false;
+            };
+
             // Update counts
             document.getElementById('cnt-all').textContent = allOrders.length;
-            ['pending', 'paid', 'shipping', 'completed', 'cancelled'].forEach(s => {
-                document.getElementById(`cnt-${s}`).textContent = allOrders.filter(o => o.status === s).length;
+            ['pending', 'paid', 'shipping', 'completed', 'cancelled'].forEach(f => {
+                document.getElementById(`cnt-${f}`).textContent = allOrders.filter(o => checkFilter(o, f)).length;
             });
 
             // Filter
-            const orders = currentFilter === 'all'
-                ? allOrders
-                : allOrders.filter(o => o.status === currentFilter);
+            const orders = allOrders.filter(o => checkFilter(o, currentFilter));
 
             if (orders.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500">尚無此狀態的訂單</td></tr>`;
@@ -197,13 +207,32 @@
             }
 
             orders.forEach(order => {
-                const statusInfo = Utils.getStatus(order.status);
+                const paymentInfo = Utils.getStatus(order.payment_status || 'unpaid'); // Need to handle generic status mapping if Utils not updated, assuming standard text/color
+                const shippingInfo = Utils.getStatus(order.shipping_status || 'none');
                 const payout = Math.round(order.total_amount * 0.9); // 10% Platform Fee
+
+                // Temporary simplified mapping for Utils until we update Utils.js
+                const getBadge = (status, type) => {
+                    let color = '#94a3b8'; // gray
+                    let text = status;
+
+                    if (status === 'paid' || status === 'delivered') color = '#4ade80'; // green
+                    if (status === 'shipping' || status === 'shipped') color = '#60a5fa'; // blue
+                    if (status === 'unpaid') color = '#facc15'; // yellow
+                    if (status === 'cancelled') color = '#f87171'; // red
+
+                    const map = {
+                        'unpaid': '未付款', 'paid': '已付款', 'cancelled': '已取消',
+                        'none': '-', 'preparing': '備貨中', 'shipped': '運送中', 'delivered': '已送達'
+                    };
+
+                    return `<span class="status-badge" style="background:${color}20; color:${color}">${map[status] || status}</span>`;
+                };
 
                 const tr = document.createElement('tr');
                 tr.className = "cursor-pointer hover:bg-white/5 border-b border-gray-700/50";
 
-                // Event Info
+                // ... (Event info const same as before) ...
                 const eventInfo = `
                     <div class="font-bold text-white text-sm">${order.event_title || '--'}</div>
                     <div class="text-xs text-gray-400 mt-1">${order.session_time || ''} | ${order.venue || ''}</div>
@@ -218,7 +247,8 @@
                     </td>
                     <td class="p-4 align-top text-right font-mono text-white">${Utils.formatCurrency(order.total_amount)}</td>
                     <td class="p-4 align-top text-right font-mono text-green-400 font-bold">${Utils.formatCurrency(payout)}</td>
-                    <td class="p-4 align-top text-center"><span class="status-badge" style="background:${statusInfo.color}20; color:${statusInfo.color}">${statusInfo.text}</span></td>
+                    <td class="p-4 align-top text-center">${getBadge(order.payment_status, 'payment')}</td>
+                    <td class="p-4 align-top text-center">${getBadge(order.shipping_status, 'shipping')}</td>
                     <td class="p-4 align-top text-right text-gray-400 text-sm font-mono">${order.created_at.split(' ')[0]}</td>
                 `;
 
@@ -238,7 +268,7 @@
 
                 // Shipping Action Area
                 let actionArea = '';
-                if (order.status === 'paid') {
+                if (order.payment_status === 'paid' && (order.shipping_status === 'preparing' || order.shipping_status === 'none')) {
                     actionArea = `
                         <div class="shipping-section mt-4">
                             <div class="flex items-center gap-2 flex-1">
@@ -249,7 +279,7 @@
                             <button onclick="shipOrder('${order.id}')" class="btn-primary py-1 px-4 text-sm whitespace-nowrap">確認出貨</button>
                         </div>
                     `;
-                } else if (order.status === 'shipping' || order.status === 'completed') {
+                } else if (order.shipping_status === 'shipped' || order.shipping_status === 'delivered') {
                     actionArea = `
                          <div class="mt-4 p-3 bg-gray-800/50 rounded border border-gray-700 flex justify-between items-center">
                             <div class="text-sm">
@@ -291,6 +321,7 @@
                             </div>
 
                             <!-- Column 3: Items -->
+                            <!-- Column 3: Items -->
                              <div class="detail-card">
                                 <h5>購買項目 (Items)</h5>
                                 <div class="detail-text">
@@ -299,6 +330,49 @@
                                         <span>Total</span>
                                         <span>${Utils.formatCurrency(order.total_amount)}</span>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Column 4: History/Logs (Structured) -->
+                            <div class="detail-card" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 1.5rem;">
+                                <h5>訂單歷程 (History)</h5>
+                                <div class="detail-text">
+                                    ${(() => {
+                        const logs = order.logs || [];
+                        const getLog = (s) => logs.find(l => l.status === s);
+
+                        const createdLog = getLog('created') || { time: order.created_at }; // Fallback
+                        const paidLog = getLog('paid');
+                        const shippingLog = getLog('shipped');
+                        const completedLog = getLog('delivered');
+
+                        const fmtTime = (t) => t ? t.split('T').join(' ').slice(0, 16) : '--';
+
+                        const stepItem = (label, log, isActive) => `
+                                            <div class="flex items-start gap-3 mb-3 last:mb-0">
+                                                <div class="mt-1 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${isActive ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-600 bg-transparent'}">
+                                                    ${isActive ? '<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                                                </div>
+                                                <div>
+                                                    <div class="text-sm ${isActive ? 'text-white font-bold' : 'text-gray-500'}">${label}</div>
+                                                    <div class="text-xs text-gray-400 font-mono">${isActive ? fmtTime(log.time) : '--'}</div>
+                                                </div>
+                                            </div>
+                                        `;
+
+                        return `
+                                            <div class="mb-5">
+                                                <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">付款狀態 (Payment)</div>
+                                                ${stepItem('未付款 (Unpaid)', createdLog, true)}
+                                                ${stepItem('已付款 (Paid)', paidLog, !!paidLog)}
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">運送狀態 (Shipping)</div>
+                                                ${stepItem('已寄出 (Shipped)', shippingLog, !!shippingLog)}
+                                                ${stepItem('已收到 (Received)', completedLog, !!completedLog)}
+                                            </div>
+                                        `;
+                    })()}
                                 </div>
                             </div>
                         </div>
@@ -332,7 +406,7 @@
 
             if (confirm(`確認使用物流單號 [${trackingNum}] 進行出貨？`)) {
                 window.db.updateOrder(orderId, {
-                    status: 'shipping',
+                    shipping_status: 'shipped',
                     tracking_number: trackingNum
                 });
                 alert('出貨成功！');

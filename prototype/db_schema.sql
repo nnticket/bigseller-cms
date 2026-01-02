@@ -111,7 +111,8 @@ CREATE TABLE orders (
     platform_fee DECIMAL(15, 2) DEFAULT 0.00,
     payout_amount DECIMAL(15, 2) DEFAULT 0.00,
     
-    status ENUM('pending', 'paid', 'shipping', 'completed', 'cancelled', 'refunded') DEFAULT 'pending',
+    payment_status ENUM('unpaid', 'paid', 'refunded', 'cancelled') DEFAULT 'unpaid',
+    shipping_status ENUM('none', 'preparing', 'shipped', 'delivered', 'returned') DEFAULT 'none',
     
     -- Snapshots
     event_snapshot_title VARCHAR(255),
@@ -154,8 +155,9 @@ CREATE TABLE order_items (
 CREATE TABLE order_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     order_id VARCHAR(50) NOT NULL,
-    old_status ENUM('pending', 'paid', 'shipping', 'completed', 'cancelled', 'refunded'),
-    new_status ENUM('pending', 'paid', 'shipping', 'completed', 'cancelled', 'refunded') NOT NULL,
+    status_type ENUM('payment', 'shipping') NOT NULL,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50) NOT NULL,
     operator VARCHAR(100) DEFAULT 'System',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
