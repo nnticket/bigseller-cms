@@ -576,7 +576,7 @@
                                 <!-- Global Save Button Removed -->
                                 <button onclick="showListView()" id="btnViewList"
                                     class="btn-outline active text-sm">列表模式</button>
-                                <button onclick="showAddView()" id="btnViewAdd"
+                                <button onclick="showAddView()" id="btnViewAdd" style="display:none;"
                                     class="btn-primary text-sm shadow-lg shadow-indigo-500/20">
                                     + 新增票券
                                 </button>
@@ -605,104 +605,90 @@
                         </div>
 
                         <!-- View 2: Add Form (Hidden by default) -->
-                        <div id="viewAdd" style="display:none;">
-                            <div class="mb-4">
-                                <button onclick="backToSessionList()"
-                                    class="text-sm text-gray-400 hover:text-white flex items-center gap-1">
-                                    × 取消選擇 (Clear Selection)
-                                </button>
-                            </div>
+                        <!-- Clear Selection Button Removed -->
 
-                            <form onsubmit="submitTicket(event)">
-                                <!-- Global Select Removed -->
+                        <form onsubmit="submitTicket(event)">
+                            <!-- Global Select Removed -->
 
 
-                                <!-- 2-Column Layout for Input Fields -->
-                                <div class="inspector-grid">
+                            <!-- 2-Column Layout for Input Fields -->
+                            <div class="inspector-grid">
 
-                                    <!-- LEFT COLUMN: Pricing & Details -->
-                                    <div>
-                                        <!-- ROI / Pricing -->
-                                        <div class="field-group">
-                                            <div class="field-group-title">價格參考 (Pricing Reference)</div>
-                                            <div class="text-sm text-gray-400 mb-2">
-                                                請在右側針對每一組座位設定價格。下方為當前區域的市場行情參考。
-                                            </div>
-                                        </div>
+                                <!-- LEFT COLUMN: Pricing & Details -->
+                                <div>
+                                    <!-- ROI / Pricing Removed (Moved to per-row) -->
 
-                                        <!-- Details -->
-                                        <div class="field-group" style="margin-bottom:0;">
-                                            <div class="field-group-title">票券詳情 (Details)</div>
-                                            <div class="form-grid" style="margin-bottom:0;">
-                                                <div class="col-span-6">
-                                                    <div class="input-group">
-                                                        <label class="mb-3">票券類型</label>
-                                                        <div class="pill-toggle">
-                                                            <label>
-                                                                <input type="radio" name="tt" value="paper" checked
-                                                                    class="hidden">
-                                                                <span>紙本票 (Paper)</span>
-                                                            </label>
-                                                            <label>
-                                                                <input type="radio" name="tt" value="eticket"
-                                                                    class="hidden">
-                                                                <span>電子票 (E-Ticket)</span>
-                                                            </label>
-                                                        </div>
+                                    <!-- Details -->
+                                    <div class="field-group" style="margin-bottom:0;">
+                                        <div class="field-group-title">票券詳情 (Details)</div>
+                                        <div class="form-grid" style="margin-bottom:0;">
+                                            <div class="col-span-6">
+                                                <div class="input-group">
+                                                    <label class="mb-3">票券類型</label>
+                                                    <div class="pill-toggle">
+                                                        <label>
+                                                            <input type="radio" name="tt" value="paper" checked
+                                                                class="hidden">
+                                                            <span>紙本票 (Paper)</span>
+                                                        </label>
+                                                        <label>
+                                                            <input type="radio" name="tt" value="eticket"
+                                                                class="hidden">
+                                                            <span>電子票 (E-Ticket)</span>
+                                                        </label>
                                                     </div>
                                                 </div>
-                                                <div class="col-span-6">
-                                                    <div class="input-group">
-                                                        <label class="mb-3">特殊標記</label>
-                                                        <div class="flex gap-4 mt-2">
-                                                            <label
-                                                                class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-white">
-                                                                <input type="checkbox"
-                                                                    class="accent-indigo-500 w-4 h-4">
-                                                                視線遮蔽
-                                                            </label>
-                                                            <label
-                                                                class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-white">
-                                                                <input type="checkbox"
-                                                                    class="accent-indigo-500 w-4 h-4">
-                                                                輪椅席
-                                                            </label>
-                                                        </div>
+                                            </div>
+                                            <div class="col-span-6">
+                                                <div class="input-group">
+                                                    <label class="mb-3">特殊標記</label>
+                                                    <div class="flex gap-4 mt-2">
+                                                        <label
+                                                            class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-white">
+                                                            <input type="checkbox" class="accent-indigo-500 w-4 h-4">
+                                                            視線遮蔽
+                                                        </label>
+                                                        <label
+                                                            class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-white">
+                                                            <input type="checkbox" class="accent-indigo-500 w-4 h-4">
+                                                            輪椅席
+                                                        </label>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- RIGHT COLUMN: Seat Info -->
-                                    <div>
-                                        <div class="field-group h-full">
-                                            <div class="flex justify-between items-center mb-4">
-                                                <div class="field-group-title mb-0"
-                                                    style="margin-bottom:0; border:none;">座位資訊 (Seat Info)</div>
-                                                <button type="button" onclick="addSeatEntry()"
-                                                    class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded hover:bg-indigo-500/40">
-                                                    + 新增一組
-                                                </button>
-                                            </div>
-
-                                            <div id="seatEntriesContainer" class="flex flex-col gap-4">
-                                                <!-- Dynamic Entries -->
-                                            </div>
-                                        </div>
-                                    </div> <!-- End Right Column -->
-                                </div> <!-- End inspector-grid -->
-
-                                <div class="btn-submit-container">
-                                    <button type="submit" class="btn-primary">立即刊登 (List Item)</button>
                                 </div>
 
-                            </form>
-                        </div>
-                    </div> <!-- End inspector-scroll -->
-                </div> <!-- End inspector-section -->
-            </div> <!-- End contentWrapper -->
-        </main>
+                                <!-- RIGHT COLUMN: Seat Info -->
+                                <div>
+                                    <div class="field-group h-full">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <div class="field-group-title mb-0" style="margin-bottom:0; border:none;">
+                                                座位資訊 (Seat Info)</div>
+                                            <button type="button" onclick="addSeatEntry()"
+                                                class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded hover:bg-indigo-500/40">
+                                                + 新增一組
+                                            </button>
+                                        </div>
+
+                                        <div id="seatEntriesContainer" class="flex flex-col gap-4">
+                                            <!-- Dynamic Entries -->
+                                        </div>
+                                    </div>
+                                </div> <!-- End Right Column -->
+                            </div> <!-- End inspector-grid -->
+
+                            <div class="btn-submit-container">
+                                <button type="submit" class="btn-primary">立即刊登 (List Item)</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div> <!-- End inspector-scroll -->
+            </div> <!-- End inspector-section -->
+    </div> <!-- End contentWrapper -->
+    </main>
     </div>
 
     <script src="js/utils.js?v=10"></script>
@@ -725,6 +711,9 @@
 
                 renderTicketList(); // Load all
                 showListView();
+
+                // Hide Add Button by default (invalid without session)
+                document.getElementById('btnViewAdd').style.display = 'none';
             }
         });
 
@@ -809,17 +798,12 @@
 
             // DIRECTLY Show Add Form in Full Screen
             showAddView();
+
+            // Enable Add Button since session is selected
+            document.getElementById('btnViewAdd').style.display = 'block';
         }
 
-        function backToSessionList() {
-            // Hide Content
-            document.getElementById('contentWrapper').style.display = 'none';
-            document.getElementById('emptyState').style.display = 'flex';
 
-            // Clear Selection
-            currentSess = null;
-            document.querySelectorAll('.tree-item').forEach(x => x.classList.remove('active'));
-        }
 
         function showListView() {
             document.getElementById('viewList').style.display = 'block';
@@ -1083,6 +1067,31 @@
             addSeatEntry();
         }
 
+        // Per-row price update
+        function updateRowPriceInfo(selectEl) {
+            const areaId = selectEl.value;
+            const container = selectEl.closest('.col-span-9'); // Find the main column container
+            const bar = container.querySelector('.price-ref-bar');
+
+            if (!bar) return;
+
+            const sessId = currentSess ? currentSess.id : null;
+            if (!sessId) return;
+
+            const areas = window.db.getSessionAreas(sessId);
+            const area = areas.find(a => a.id == areaId);
+
+            if (area) {
+                bar.innerHTML = `
+                    <span class="text-gray-500 text-[10px]">Min: $${area.minPrice}</span>
+                    <span class="text-indigo-300 font-bold mx-2 text-xs">Avg: $${area.avgPrice}</span>
+                    <span class="text-gray-500 text-[10px]">Max: $${area.maxPrice}</span>
+                `;
+            } else {
+                bar.innerHTML = `<span>請選擇區域以查看價格參考</span>`;
+            }
+        }
+
         // Renamed/Refactored to handle row interactions
         function addSeatEntry(preselectedAreaId = null) {
             const container = document.getElementById('seatEntriesContainer');
@@ -1102,10 +1111,10 @@
                     <!-- Main Ticket Info (Left 75%) -->
                     <div class="col-span-9 pr-6">
                         <!-- Row 1: Area & Price -->
-                        <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-2 gap-4 mb-2">
                             <div>
                                 <label class="block text-xs text-gray-400 mb-1">區域 (Area)</label>
-                                <select class="classic-input area-inp py-1 px-2 text-sm h-10 bg-gray-900">
+                                <select class="classic-input area-inp py-1 px-2 text-sm h-10 bg-gray-900" onchange="updateRowPriceInfo(this)">
                                     <option value="" disabled selected>選擇區域...</option>
                                 </select>
                             </div>
@@ -1113,6 +1122,12 @@
                                <label class="block text-xs text-green-400 mb-1">單價 (Price)</label>
                                 <input type="number" class="classic-input price-inp h-10 py-1 text-green-400 font-bold bg-gray-900" placeholder="$">
                             </div>
+                        </div>
+
+                        <!-- Price Reference Bar -->
+                        <div class="price-ref-bar text-xs text-gray-500 mb-4 h-4 flex items-center justify-between px-1">
+                            <!-- JS Injected Info -->
+                            <span>請選擇區域以查看價格參考</span>
                         </div>
 
                         <!-- Row 2: Row/Seat -->
