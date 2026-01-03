@@ -18,75 +18,69 @@ class MockDatabase {
             { id: 1, username: 'TicketMasterTW', shop_name: '台灣票務大王', status: 'active' }
         ];
 
-        // 3. Events & Sessions
-        this.events = [
-            { id: 101, title: '周杰倫嘉年華世界巡迴演唱會 - 臺北站', poster: 'jay.jpg' },
-            { id: 102, title: 'aMEI ASMR MAX 演唱會 - 高雄站', poster: 'amei.jpg' },
-            { id: 103, title: 'Maroon 5 Asia Tour 2025 - Kaohsiung', poster: 'm5.jpg' },
-            { id: 104, title: 'BLACKPINK BORN PINK FINALE - Taipei', poster: 'bp.jpg' },
-            { id: 105, title: 'Coldplay: Music of the Spheres - Kaohsiung', poster: 'coldplay.jpg' }
+        // 3. Venues
+        this.venues = [
+            { id: 1, name: '臺北大巨蛋 (Taipei Dome)', city: 'Taipei', capacity: 40000 },
+            { id: 2, name: '台北小巨蛋 (Taipei Arena)', city: 'Taipei', capacity: 11000 },
+            { id: 3, name: '高雄巨蛋 (Kaohsiung Arena)', city: 'Kaohsiung', capacity: 15000 },
+            { id: 4, name: '高雄世運主場館 (National Stadium)', city: 'Kaohsiung', capacity: 55000 },
+            { id: 5, name: 'Zepp New Taipei', city: 'New Taipei', capacity: 2500 },
+            { id: 6, name: 'Legacy Taipei', city: 'Taipei', capacity: 1000 },
+            { id: 7, name: '東京巨蛋 (Tokyo Dome)', city: 'Tokyo', capacity: 55000 },
+            { id: 8, name: '首爾奧林匹克主競技場', city: 'Seoul', capacity: 69000 },
+            { id: 9, name: '紅磡體育館 (Hong Kong Coliseum)', city: 'Hong Kong', capacity: 12500 },
+            { id: 10, name: '亞洲國際博覽館 (AsiaWorld-Expo)', city: 'Hong Kong', capacity: 14000 },
+            { id: 11, name: '梅賽德斯-奔馳文化中心', city: 'Shanghai', capacity: 18000 }
         ];
 
-        this.sessions = [
-            // Jay Chou (Taipei Dome)
-            { id: 201, event_id: 101, session_time: '2025-12-31T20:00:00', venue: '臺北大巨蛋' },
-            { id: 202, event_id: 101, session_time: '2026-01-01T19:30:00', venue: '臺北大巨蛋' },
-            { id: 203, event_id: 101, session_time: '2026-01-02T19:30:00', venue: '臺北大巨蛋' },
-            // aMEI (Kaohsiung Arena)
-            { id: 204, event_id: 102, session_time: '2025-12-25T19:30:00', venue: '高雄巨蛋' },
-            { id: 205, event_id: 102, session_time: '2025-12-26T19:30:00', venue: '高雄巨蛋' },
-            { id: 206, event_id: 102, session_time: '2025-12-31T21:30:00', venue: '高雄巨蛋' },
-            // Maroon 5 (Kaohsiung National Stadium)
-            { id: 207, event_id: 103, session_time: '2025-02-14T20:00:00', venue: '高雄世運主場館' },
-            // BLACKPINK (Taipei Dome)
-            { id: 208, event_id: 104, session_time: '2026-03-18T19:00:00', venue: '臺北大巨蛋' },
-            { id: 209, event_id: 104, session_time: '2026-03-19T19:00:00', venue: '臺北大巨蛋' },
-            // Coldplay (Kaohsiung National Stadium)
-            { id: 210, event_id: 105, session_time: '2025-11-11T19:30:00', venue: '高雄世運主場館' },
-            { id: 211, event_id: 105, session_time: '2025-11-12T19:30:00', venue: '高雄世運主場館' }
-        ];
+        // 4. Events & Sessions (Generated)
+        this.events = [];
+        this.sessions = [];
+        this.sessionAreas = [];
 
-        // --- Generate Large Volume of Mock Data for Testing ---
-        const venues = ['台北小巨蛋', '高雄巨蛋', '臺北流行音樂中心', 'Zepp New Taipei', 'Legacy Taipei'];
-        const artists = ['五月天', '蔡依林', '林俊傑', '告五人', '草東沒有派對', '伍佰', '動力火車', '田馥甄'];
+        // --- Generate Large Volume of Mock Data (50+ Events) ---
+        const artists = ['周杰倫', '五月天', '蔡依林', '林俊傑', '張惠妹', '告五人', '草東沒有派對', '伍佰', '動力火車', '田馥甄', 'BLACKPINK', 'Coldplay', 'Maroon 5', 'Ed Sheeran', 'Taylor Swift'];
+        const tours = ['嘉年華世界巡迴', '諾亞方舟復刻', 'Ugly Beauty Finale', 'JJ20', 'ASMR MAX', '帶你飛', '不都媽生的', 'Rock Star', '都是因為愛', '一一', 'BORN PINK', 'Music of the Spheres', 'Asia Tour', 'Mathematics Tour', 'The Eras Tour'];
 
         for (let i = 1; i <= 60; i++) {
+            const venue = this.venues[Math.floor(Math.random() * this.venues.length)];
             const artist = artists[Math.floor(Math.random() * artists.length)];
-            const venue = venues[Math.floor(Math.random() * venues.length)];
-            const evId = 1000 + i;
+            const tour = tours[Math.floor(Math.random() * tours.length)];
+
+            const evId = 100 + i;
+            const year = Math.random() > 0.3 ? 2025 : 2026;
 
             this.events.push({
                 id: evId,
-                title: `${artist} 2026 巡迴演唱會 - ${i}號場`,
-                poster: 'default.jpg'
+                venue_id: venue.id,
+                title: `${artist} ${tour}演唱會 ${year} - ${venue.city}站`,
+                poster: 'default.jpg',
+                description: `這是 ${artist} 在 ${venue.name} 的精彩演出！`
             });
 
-            // Add 1-3 sessions per event
-            const sessCount = Math.floor(Math.random() * 3) + 1;
+            // Add 1-4 sessions per event
+            const sessCount = Math.floor(Math.random() * 4) + 1;
             for (let j = 0; j < sessCount; j++) {
+                const month = Math.floor(Math.random() * 12);
+                const day = Math.floor(Math.random() * 28) + 1;
+                const sessId = 20000 + (evId * 100) + j;
+
                 this.sessions.push({
-                    id: 20000 + (i * 10) + j,
+                    id: sessId,
                     event_id: evId,
-                    session_time: new Date(2026, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1, 19, 30).toISOString(),
-                    venue: venue
+                    session_time: new Date(year, month, day, 19, 30).toISOString(),
+                    // venue: venue.name // Removed from schema, accessed via event->venue
                 });
+
+                // Generate Areas
+                let areaType = 'STADIUM';
+                if (venue.name.includes('巨蛋') || venue.name.includes('Arena') || venue.name.includes('Coliseum')) areaType = 'ARENA_AMEI';
+                if (venue.name.includes('Zepp') || venue.name.includes('Legacy')) areaType = 'SMALL_HOUSE';
+                if (venue.name.includes('大巨蛋')) areaType = 'DOME_JAY';
+
+                this.sessionAreas.push(...this._generateAreas(sessId, areaType));
             }
         }
-
-        // 3.1 Session Areas (Standardized)
-        this.sessionAreas = [];
-        this.sessions.forEach(session => {
-            let areas = [];
-            // Determine Type based on venue or event
-            if (session.venue.includes('大巨蛋')) {
-                areas = this._generateAreas(session.id, 'DOME_JAY');
-            } else if (session.venue.includes('高雄巨蛋')) {
-                areas = this._generateAreas(session.id, 'ARENA_AMEI');
-            } else {
-                areas = this._generateAreas(session.id, 'STADIUM');
-            }
-            this.sessionAreas.push(...areas);
-        });
 
         // 4. Seller Tickets (Inventory)
         this.tickets = [];
@@ -260,16 +254,36 @@ class MockDatabase {
     }
 
     _generateMockTickets() {
-        const targetSessions = [
-            { id: 201, event_id: 101, type: 'DOME_JAY' },     // Jay Chou
-            { id: 204, event_id: 102, type: 'ARENA_AMEI' },   // aMEI
-            { id: 207, event_id: 103, type: 'STADIUM' }       // Maroon 5
-        ];
+        // Pick 3 random sessions from the generated list
+        const targetSessions = [];
+        if (this.sessions.length > 0) {
+            for (let k = 0; k < 3; k++) {
+                const randomSess = this.sessions[Math.floor(Math.random() * this.sessions.length)];
+                if (!targetSessions.includes(randomSess)) {
+                    targetSessions.push(randomSess);
+                }
+            }
+        }
 
         const statuses = ['on_shelf', 'on_shelf', 'on_shelf', 'off_shelf', 'sold', 'draft'];
 
         targetSessions.forEach(sess => {
-            const areas = this._generateAreas(sess.id, sess.type);
+            // Determine type again or store it? 
+            // Better to re-derive or just use generic since we don't store 'type' in session anymore.
+            // But _generateAreas needs a strategy.
+            // Let's resolve venue to decide strategy.
+            const event = this.events.find(e => e.id === sess.event_id);
+            const venue = event ? this.venues.find(v => v.id === event.venue_id) : null;
+
+            let areaType = 'STADIUM';
+            if (venue) {
+                if (venue.name.includes('巨蛋') || venue.name.includes('Arena') || venue.name.includes('Coliseum')) areaType = 'ARENA_AMEI';
+                if (venue.name.includes('Zepp') || venue.name.includes('Legacy')) areaType = 'SMALL_HOUSE';
+                if (venue.name.includes('大巨蛋')) areaType = 'DOME_JAY';
+            }
+
+            const areas = this._generateAreas(sess.id, areaType);
+
             // Generate ~12 tickets per session
             for (let i = 0; i < 12; i++) {
                 const area = areas[Math.floor(Math.random() * areas.length)];
@@ -317,7 +331,17 @@ class MockDatabase {
     }
 
     getSessions(eventId) {
-        return this.sessions.filter(s => s.event_id === eventId);
+        // Hydrate venue name for UI compatibility
+        return this.sessions
+            .filter(s => s.event_id === eventId)
+            .map(s => {
+                const event = this.events.find(e => e.id === s.event_id);
+                const venue = event ? this.venues.find(v => v.id === event.venue_id) : null;
+                return {
+                    ...s,
+                    venue: venue ? venue.name : 'Unknown Venue'
+                };
+            });
     }
 
     getRecentOrders(limit = 5) {
