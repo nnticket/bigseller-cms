@@ -607,44 +607,26 @@
                         <!-- View 2: Add Form (Hidden by default) -->
                         <div id="viewAdd" style="display:none;">
                             <div class="mb-4">
-                                <button onclick="showListView()"
+                                <button onclick="backToSessionList()"
                                     class="text-sm text-gray-400 hover:text-white flex items-center gap-1">
-                                    ← 返回列表
+                                    × 取消選擇 (Clear Selection)
                                 </button>
                             </div>
 
                             <form onsubmit="submitTicket(event)">
-                                <!-- Group 1: Hidden Area Trigger (Logic Only) -->
-                                <div style="display:none;"></div>
+                                <!-- Global Select Removed -->
+
 
                                 <!-- 2-Column Layout for Input Fields -->
                                 <div class="inspector-grid">
 
-                                    <!-- LEFT COLUMN: Seat Info -->
-                                    <div>
-                                        <div class="field-group h-full">
-                                            <div class="flex justify-between items-center mb-4">
-                                                <div class="field-group-title mb-0"
-                                                    style="margin-bottom:0; border:none;">座位資訊 (Seat Info)</div>
-                                                <button type="button" onclick="addSeatEntry()"
-                                                    class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded hover:bg-indigo-500/40">
-                                                    + 新增一組
-                                                </button>
-                                            </div>
-
-                                            <div id="seatEntriesContainer" class="flex flex-col gap-4">
-                                                <!-- Dynamic Entries -->
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- RIGHT COLUMN: Pricing & Details -->
+                                    <!-- LEFT COLUMN: Pricing & Details -->
                                     <div>
                                         <!-- ROI / Pricing -->
                                         <div class="field-group">
                                             <div class="field-group-title">價格參考 (Pricing Reference)</div>
                                             <div class="text-sm text-gray-400 mb-2">
-                                                請在左側針對每一組座位設定價格。下方為當前區域的市場行情參考。
+                                                請在右側針對每一組座位設定價格。下方為當前區域的市場行情參考。
                                             </div>
                                         </div>
 
@@ -688,6 +670,24 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- RIGHT COLUMN: Seat Info -->
+                                    <div>
+                                        <div class="field-group h-full">
+                                            <div class="flex justify-between items-center mb-4">
+                                                <div class="field-group-title mb-0"
+                                                    style="margin-bottom:0; border:none;">座位資訊 (Seat Info)</div>
+                                                <button type="button" onclick="addSeatEntry()"
+                                                    class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded hover:bg-indigo-500/40">
+                                                    + 新增一組
+                                                </button>
+                                            </div>
+
+                                            <div id="seatEntriesContainer" class="flex flex-col gap-4">
+                                                <!-- Dynamic Entries -->
                                             </div>
                                         </div>
                                     </div> <!-- End Right Column -->
@@ -799,15 +799,26 @@
             // Headers
             document.getElementById('headerTitle').textContent = ev.title;
             const dt = new Date(sess.session_time);
+            document.getElementById('headerTime').style.display = 'inline-block';
             document.getElementById('headerTime').textContent = dt.toLocaleString('zh-TW');
+            document.getElementById('headerVenue').style.display = 'inline-block';
             document.getElementById('headerVenue').textContent = sess.venue;
 
             // Load Areas
             renderAreas(sess.id);
 
-            // Render Ticket List
-            renderTicketList(sess.id);
-            showListView();
+            // DIRECTLY Show Add Form in Full Screen
+            showAddView();
+        }
+
+        function backToSessionList() {
+            // Hide Content
+            document.getElementById('contentWrapper').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'flex';
+
+            // Clear Selection
+            currentSess = null;
+            document.querySelectorAll('.tree-item').forEach(x => x.classList.remove('active'));
         }
 
         function showListView() {
@@ -821,7 +832,7 @@
             document.getElementById('viewList').style.display = 'none';
             document.getElementById('viewAdd').style.display = 'block';
             document.getElementById('btnViewList').classList.remove('bg-indigo-500/20', 'text-indigo-300');
-            // document.getElementById('btnViewAdd').classList.add('bg-indigo-500/20', 'text-indigo-300'); // Primary btn style
+            document.getElementById('btnViewAdd').classList.add('bg-indigo-500/20', 'text-indigo-300');
         }
 
         function renderTicketList(sessId = null) {
