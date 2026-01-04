@@ -558,9 +558,11 @@
                                             <th class="p-3 border-b border-gray-700">活動/場次 (Event)</th>
                                             <th class="p-3 border-b border-gray-700">區域/座位</th>
                                             <th class="p-3 border-b border-gray-700 text-center">數量 (Qty)</th>
-                                            <th class="p-3 border-b border-gray-700 text-right">價格 (Price)</th>
+                                            <th class="p-3 border-b border-gray-700 text-right">售價 (Selling Price)</th>
+                                            <th class="p-3 border-b border-gray-700 text-right text-green-400">預期收益
+                                                (Payout)</th>
                                             <th class="p-3 border-b border-gray-700 text-center">狀態</th>
-                                            <th class="p-3 border-b border-gray-700 text-center">操作 (Action)</th>
+                                            <th class="p-3 border-b border-gray-700 text-center">操作</th>
                                         </tr>
                                     </thead>
                                     <tbody id="ticketListBody">
@@ -569,8 +571,6 @@
                                 </table>
                             </div>
                         </div>
-
-                        <!-- View 2: Add Form (Hidden by default) -->
 
 
                         <!-- View 2: Add Form (Hidden by default) -->
@@ -838,7 +838,7 @@
             document.getElementById('ticketCountBadge').textContent = tickets.length;
 
             if (tickets.length === 0) {
-                listBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">尚無票券。點擊右上角「新增票券」開始刊登。</td></tr>`;
+                listBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500">尚無票券。點擊右上角「新增票券」開始刊登。</td></tr>`;
                 return;
             }
 
@@ -846,98 +846,133 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-800/50 transition-colors border-b border-gray-700/50';
 
-                // Resolve Event/Session Info
-                // Ideally this data is joined, but we look it up
-                const sess = window.db.sessions.find(s => s.id === t.session_id);
-                const ev = sess ? window.db.events.find(e => e.id === sess.event_id) : null;
+                // Resolve Data references
+                const ev = window.db.events.find(e => e.id == t.event_id);
+                const sess = window.db.sessions.find(s => s.id == t.session_id);
+                const timeStr = sess ? new Date(sess.session_time).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown Time';
 
-                const eventInfo = ev ? `<div class="font-bold text-white text-sm line-clamp-1" title="${ev.title}">${ev.title}</div>
-                                        <div class="text-xs text-gray-400 font-mono">
-                                            ${new Date(sess.session_time).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 
-                                            @ ${sess.venue}
-                                        </div>` : '<span class="text-gray-500">Unknown</span>';
+                // Status Logic (Pill Toggle)
+                let statusUI = '';
 
-                // Status Logic (Radio Toggle)
-                let statusControl = '';
                 if (t.status === 'sold') {
-                    statusControl = `<span class="bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded text-xs">已售出 (Sold)</span>`;
+                    statusUI = `<span class="bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded text-xs border border-indigo-500/30">已售出</span>`;
                 } else {
                     const isOn = t.status === 'on_shelf';
 
-                    // Base classes
-                    const containerClass = "pill-toggle inline-flex bg-gray-900 rounded-lg p-1 border border-gray-700/50 shadow-inner";
-                    const labelBase = "cursor-pointer px-3 py-1.5 text-xs rounded-md transition-all font-medium flex items-center gap-1.5 select-none";
+                    // Helper classes
+                    const baseLbl = "cursor-pointer px-3 py-1.5 text-xs rounded-md transition-all font-medium flex items-center gap-1.5 select-none";
+                    const activeOn = "bg-emerald-600 text-white shadow-lg shadow-emerald-900/50 ring-1 ring-emerald-500/50";
+                    const activeOff = "bg-rose-600 text-white shadow-lg shadow-rose-900/50 ring-1 ring-rose-500/50";
+                    const inactive = "text-gray-500 hover:text-gray-300 hover:bg-gray-800";
 
-                    // Active/Inactive state classes
-                    const onClass = isOn
-                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/50 ring-1 ring-emerald-500/50"
-                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800";
-
-                    const offClass = !isOn
-                        ? "bg-rose-600 text-white shadow-lg shadow-rose-900/50 ring-1 ring-rose-500/50"
-                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800";
-
-                    statusControl = `
-                        <div class="${containerClass}">
-                            <label class="status-lbl-on ${labelBase} ${onClass}">
-                                <input type="radio" name="status-${t.id}" value="on_shelf" class="hidden" ${isOn ? 'checked' : ''} onchange="updateTicketStatus('${t.id}', 'on_shelf', this)">
-                                <span class="w-1.5 h-1.5 rounded-full ${isOn ? 'bg-white' : 'bg-gray-600'} transition-colors dot-indicator"></span>
+                    statusUI = `
+                        <div class="pill-toggle inline-flex bg-gray-900 rounded-lg p-1 border border-gray-700/50 shadow-inner">
+                            <label class="${baseLbl} ${isOn ? activeOn : inactive}" onclick="updateTicketStatus('${t.id}', 'on_shelf', this)">
+                                <span class="w-1.5 h-1.5 rounded-full ${isOn ? 'bg-white' : 'bg-gray-600'}"></span>
                                 <span>上架</span>
                             </label>
-                            <label class="status-lbl-off ${labelBase} ${offClass}">
-                                <input type="radio" name="status-${t.id}" value="off_shelf" class="hidden" ${!isOn ? 'checked' : ''} onchange="updateTicketStatus('${t.id}', 'off_shelf', this)">
-                                <span class="w-1.5 h-1.5 rounded-full ${!isOn ? 'bg-white' : 'bg-gray-600'} transition-colors dot-indicator"></span>
+                            <label class="${baseLbl} ${!isOn ? activeOff : inactive}" onclick="updateTicketStatus('${t.id}', 'off_shelf', this)">
+                                <span class="w-1.5 h-1.5 rounded-full ${!isOn ? 'bg-white' : 'bg-gray-600'}"></span>
                                 <span>下架</span>
                             </label>
                         </div>
-                    `;
+                     `;
                 }
 
-                // Row/Seat Info
-                const seatInfo = `<div class="font-bold text-gray-200">${t.area_name}</div>
-                                  <div class="text-xs text-gray-400 font-mono">${t.row}排 ${t.seat}號</div>`;
-
-                // Quantity Input
-                const quantityInput = `<div class="flex items-center justify-center">
-                                        <input type="number" 
-                                            class="bg-transparent border-b border-transparent focus:border-indigo-500 text-center w-16 text-sm text-gray-300 focus:text-white outline-none font-mono"
-                                            value="${t.quantity || 1}"
-                                            min="0"
-                                            onchange="updateTicketQuantity('${t.id}', this.value, this)"
-                                        >
-                                    </div>`;
-
-                // Price Input (Quick Edit)
-                const priceInput = `<div class="flex items-center justify-end gap-1">
-                                        <span class="text-gray-500 text-xs">$</span>
-                                        <input type="number" 
-                                            class="bg-transparent border-b border-transparent focus:border-indigo-500 text-right w-20 text-sm text-gray-300 focus:text-white outline-none font-mono"
-                                            value="${t.price}"
-                                            onchange="updateTicketPrice('${t.id}', this.value, this)"
-                                        >
-                                    </div>`;
-
-                // Save Button (Initially Disabled)
-                const saveBtn = `
-                    <button id="btn-save-${t.id}" onclick="saveTicket('${t.id}')" 
-                        class="px-3 py-1.5 rounded text-xs font-bold transition-all opacity-50 cursor-not-allowed bg-gray-700 text-gray-400" disabled>
-                        儲存
-                    </button>
-                `;
+                const unitPayout = Math.floor(t.price * 0.9);
 
                 tr.innerHTML = `
-                    <td class="p-3 w-1/3">${eventInfo}</td>
-                    <td class="p-3">${seatInfo}</td>
-                    <td class="p-3 text-center">${quantityInput}</td>
-                    <td class="p-3">${priceInput}</td>
-                    <td class="p-3 text-center">${statusControl}</td>
-                    <td class="p-3 text-center">${saveBtn}</td>
+                    <td class="p-3 align-top">
+                        <div class="font-bold text-white">${ev ? ev.title : 'Unknown Event'}</div>
+                        <div class="text-xs text-gray-500">${timeStr}</div>
+                    </td>
+                    <td class="p-3 align-top">
+                        <div class="text-indigo-300">${t.area_name || t.area || 'Unknown Area'}</div>
+                        <div class="text-xs text-gray-400">${t.row}排 ${t.seat}號</div>
+                    </td>
+                    <td class="p-3 align-top text-center">
+                        <input type="number" 
+                               value="${t.quantity || 1}" 
+                               class="w-16 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-mono text-white text-sm focus:border-indigo-500 outline-none"
+                               oninput="updateListRow('${t.id}', 'quantity', this)">
+                    </td>
+                    <td class="p-3 align-top text-right">
+                        <input type="number" 
+                               value="${t.price}" 
+                               class="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-right font-mono text-white text-sm focus:border-indigo-500 outline-none"
+                               oninput="updateListRow('${t.id}', 'price', this)">
+                    </td>
+                    <td class="p-3 align-top text-right">
+                        <input type="number" 
+                               value="${unitPayout}" 
+                               class="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-right font-mono text-green-400 font-bold text-sm focus:border-green-500 outline-none"
+                               oninput="updateListRow('${t.id}', 'payout', this)">
+                    </td>
+                    <td class="p-3 align-top text-center">
+                        ${statusUI}
+                    </td>
+                    <td class="p-3 align-top text-center">
+                        <button id="btn-save-${t.id}" onclick="saveTicket('${t.id}')" 
+                                class="px-3 py-1.5 rounded text-xs font-bold transition-all opacity-50 cursor-not-allowed bg-gray-700 text-gray-400" disabled>
+                            儲存
+                        </button>
+                    </td>
                 `;
                 listBody.appendChild(tr);
             });
         }
 
-        // Per-Row Update Logic
+
+
+        function updateTicketStatus(id, newStatus, clickedLabel) {
+            const container = clickedLabel.closest('.pill-toggle');
+            if (!container) return;
+
+            const labels = container.querySelectorAll('label');
+
+            // Defs matching renderTicketList
+            const activeOn = ["bg-emerald-600", "text-white", "shadow-lg", "shadow-emerald-900/50", "ring-1", "ring-emerald-500/50"];
+            const activeOff = ["bg-rose-600", "text-white", "shadow-lg", "shadow-rose-900/50", "ring-1", "ring-rose-500/50"];
+            const inactive = ["text-gray-500", "hover:text-gray-300", "hover:bg-gray-800"];
+
+            labels.forEach(lbl => {
+                // Clear state
+                lbl.classList.remove(...activeOn, ...activeOff, ...inactive);
+
+                const dot = lbl.querySelector('span');
+                if (dot) {
+                    dot.classList.remove('bg-white', 'bg-gray-600');
+                }
+
+                if (lbl === clickedLabel) {
+                    // Active State
+                    if (newStatus === 'on_shelf') {
+                        lbl.classList.add(...activeOn);
+                    } else {
+                        lbl.classList.add(...activeOff);
+                    }
+                    if (dot) dot.classList.add('bg-white');
+                } else {
+                    // Inactive State
+                    lbl.classList.add(...inactive);
+                    if (dot) dot.classList.add('bg-gray-600');
+                }
+            });
+
+            // Queue Change
+            trackChange(id, 'status', newStatus, container);
+        }
+
+
+
+        function renderAreas(sessId) {
+            window.currentAvailableAreas = window.db.getSessionAreas(sessId);
+            const container = document.getElementById('seatEntriesContainer');
+            container.innerHTML = '';
+            addSeatEntry();
+        }
+
+        // Manual Save Logic
         let pendingChanges = new Map();
 
         function trackChange(id, field, value, inputEl) {
@@ -949,7 +984,7 @@
 
             // Visual Feedback: Input Highlight
             inputEl.classList.add('bg-indigo-900/40', 'text-indigo-200', 'border-indigo-500');
-            inputEl.classList.remove('border-transparent');
+            inputEl.classList.remove('border-gray-700');
 
             // Enable Row Save Button
             const btn = document.getElementById(`btn-save-${id}`);
@@ -957,112 +992,106 @@
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-700', 'text-gray-400');
                 btn.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-500', 'shadow-lg');
-                btn.innerText = '儲存變更';
+                btn.innerText = '儲存';
             }
-        }
-
-        function updateTicketPrice(id, newPrice, inputEl) {
-            trackChange(id, 'price', parseInt(newPrice), inputEl);
-        }
-
-        function updateTicketQuantity(id, newQty, inputEl) {
-            let qty = parseInt(newQty);
-            if (qty < 0) qty = 0;
-            trackChange(id, 'quantity', qty, inputEl);
         }
 
         async function saveTicket(id) {
             const btn = document.getElementById(`btn-save-${id}`);
             if (!btn) return;
 
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerText = '儲存中...';
-
-            // Mock Network Delay
-            await new Promise(r => setTimeout(r, 400));
-
-            // Commit Logic
             const changes = pendingChanges.get(id);
-            if (changes) {
-                window.db.updateTicket(id, changes);
-                pendingChanges.delete(id);
-            }
+            if (!changes) return;
 
-            // Visual Reset
-            // Reset button to disabled state
             btn.disabled = true;
+            btn.innerText = '...';
+
+            await new Promise(r => setTimeout(r, 300));
+
+            window.db.updateTicket(id, changes);
+            pendingChanges.delete(id);
+
             btn.innerText = '已儲存';
-            btn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-700', 'text-gray-400');
-            btn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-500', 'shadow-lg');
 
+            // Reset UI
             setTimeout(() => {
-                if (btn.disabled) btn.innerText = '儲存';
-            }, 1000);
+                btn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-700', 'text-gray-400');
+                btn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-500', 'shadow-lg');
+                btn.innerText = '儲存';
+                btn.disabled = true;
 
-            // Reset Input Highlights (only for this row ideally, simplified here)
-            // We need to re-render to fully clean or manually remove classes. 
-            // To keep it simple and responsive, let's just remove highlight classes from inputs in this row
-            const rowInputs = btn.closest('tr').querySelectorAll('input');
-            rowInputs.forEach(el => {
-                el.classList.remove('bg-indigo-900/40', 'text-indigo-200', 'border-indigo-500');
-                el.classList.add('border-transparent');
-            });
-
-            // Update Status if changed (it was a toggle, so visual is already updated, just confirming data is saved)
+                const tr = btn.closest('tr');
+                const elements = tr.querySelectorAll('input, .pill-toggle');
+                elements.forEach(el => {
+                    el.classList.remove('bg-indigo-900/40', 'text-indigo-200', 'border-indigo-500');
+                    if (el.tagName === 'INPUT') {
+                        el.classList.add('border-gray-700');
+                    } else {
+                        // Restore original generic border for pill if needed, or just let it be
+                        // It had border-gray-700/50 encoded in HTML.
+                    }
+                });
+            }, 800);
         }
 
-        function updateTicketStatus(id, newStatus, inputEl) {
-            // Batch tracking
-            trackChange(id, 'status', newStatus, inputEl);
+        // List Row Bidirectional Update
+        function updateListRow(ticketId, type, inputEl) {
+            const tr = inputEl.closest('tr');
+            const priceInp = tr.querySelector('input[oninput*="price"]');
+            const payoutInp = tr.querySelector('input[oninput*="payout"]');
 
-            // UI Toggle Logic
-            const wrapper = inputEl.closest('.pill-toggle');
-            if (!wrapper) return;
+            let price = parseInt(priceInp ? priceInp.value : 0) || 0;
+            let payout = parseInt(payoutInp ? payoutInp.value : 0) || 0;
 
-            const lblOn = wrapper.querySelector('.status-lbl-on');
-            const lblOff = wrapper.querySelector('.status-lbl-off');
-            const dotOn = lblOn.querySelector('.dot-indicator');
-            const dotOff = lblOff.querySelector('.dot-indicator');
+            if (type === 'quantity') {
+                trackChange(ticketId, 'quantity', parseInt(inputEl.value) || 0, inputEl);
+                return;
+            }
 
-            // Reset Base
-            const baseClass = "cursor-pointer px-3 py-1.5 text-xs rounded-md transition-all font-medium flex items-center gap-1.5 select-none";
-            const inactiveClass = "text-gray-500 hover:text-gray-300 hover:bg-gray-800";
-
-            // Active Styles
-            const activeOnClass = "bg-emerald-600 text-white shadow-lg shadow-emerald-900/50 ring-1 ring-emerald-500/50";
-            const activeOffClass = "bg-rose-600 text-white shadow-lg shadow-rose-900/50 ring-1 ring-rose-500/50";
-
-            if (newStatus === 'on_shelf') {
-                // Active ON
-                lblOn.className = `status-lbl-on ${baseClass} ${activeOnClass}`;
-                lblOff.className = `status-lbl-off ${baseClass} ${inactiveClass}`;
-
-                dotOn.classList.remove('bg-gray-600');
-                dotOn.classList.add('bg-white');
-
-                dotOff.classList.remove('bg-white');
-                dotOff.classList.add('bg-gray-600');
-            } else {
-                // Active OFF
-                lblOn.className = `status-lbl-on ${baseClass} ${inactiveClass}`;
-                lblOff.className = `status-lbl-off ${baseClass} ${activeOffClass}`;
-
-                dotOn.classList.remove('bg-white');
-                dotOn.classList.add('bg-gray-600');
-
-                dotOff.classList.remove('bg-gray-600');
-                dotOff.classList.add('bg-white');
+            if (type === 'price') {
+                payout = Math.floor(price * 0.9);
+                if (payoutInp) payoutInp.value = payout;
+                trackChange(ticketId, 'price', price, inputEl);
+            } else if (type === 'payout') {
+                price = Math.ceil(payout / 0.9);
+                if (priceInp) priceInp.value = price;
+                // Updating payout updates price in DB
+                trackChange(ticketId, 'price', price, inputEl);
             }
         }
 
+        function updateNetIncome(inputEl) {
+            // inputEl could be price or qty
+            const container = inputEl.closest('.ticket-entry');
+            if (!container) return;
 
+            const priceInp = container.querySelector('.price-inp');
+            const payoutInp = container.querySelector('.payout-inp');
+            // const display = container.querySelector('.net-income-display'); // Removed display element in previous step replacement
 
-        function renderAreas(sessId) {
-            window.currentAvailableAreas = window.db.getSessionAreas(sessId);
-            const container = document.getElementById('seatEntriesContainer');
-            container.innerHTML = '';
-            addSeatEntry();
+            const price = parseInt(priceInp.value) || 0;
+
+            // Per unit net
+            const unitNet = Math.floor(price * 0.9);
+
+            if (payoutInp) {
+                payoutInp.value = unitNet;
+            }
+        }
+
+        function updatePriceFromNet(inputEl) {
+            const container = inputEl.closest('.ticket-entry');
+            if (!container) return;
+
+            const priceInp = container.querySelector('.price-inp');
+            const payout = parseInt(inputEl.value) || 0;
+
+            // Reverse calc: Price = Payout / 0.9
+            const price = Math.ceil(payout / 0.9);
+
+            if (priceInp) {
+                priceInp.value = price;
+            }
         }
 
         // Per-row price update
@@ -1086,7 +1115,7 @@
                     <span class="text-gray-500 text-[10px]">Max: $${area.maxPrice}</span>
                 `;
             } else {
-                bar.innerHTML = `<span>請選擇區域以查看價格參考</span>`;
+                bar.innerHTML = `<span>請選擇區域以查看售價參考</span>`;
             }
         }
 
@@ -1108,24 +1137,28 @@
                 <div class="grid grid-cols-12 gap-4">
                     <!-- Main Ticket Info (Left 75%) -->
                     <div class="col-span-9 pr-6">
-                        <!-- Row 1: Area & Price -->
-                        <div class="grid grid-cols-2 gap-4 mb-2">
-                            <div>
+                        <!-- Row 1: Area, Price, Payout -->
+                        <div class="grid grid-cols-12 gap-4 mb-2">
+                            <div class="col-span-4">
                                 <label class="block text-xs text-gray-400 mb-1">區域 (Area)</label>
-                                <select class="classic-input area-inp py-1 px-2 text-sm h-10 bg-gray-900" onchange="updateRowPriceInfo(this)">
+                                <select class="classic-input area-inp py-1 px-2 text-sm h-10 bg-gray-900 w-full" onchange="updateRowPriceInfo(this)">
                                     <option value="" disabled selected>選擇區域...</option>
                                 </select>
                             </div>
-                            <div>
-                               <label class="block text-xs text-green-400 mb-1">單價 (Price)</label>
-                                <input type="number" class="classic-input price-inp h-10 py-1 text-green-400 font-bold bg-gray-900" placeholder="$">
+                            <div class="col-span-4">
+                               <label class="block text-xs text-green-400 mb-1">售價 (Selling Price)</label>
+                                <input type="number" class="classic-input price-inp h-10 py-1 text-green-400 font-bold bg-gray-900 w-full" placeholder="$" oninput="updateNetIncome(this)">
+                            </div>
+                            <div class="col-span-4">
+                                <label class="block text-xs text-green-400 mb-1">預期收益 (Payout)</label>
+                                <input type="number" class="classic-input payout-inp h-10 py-1 text-green-400 font-bold bg-gray-900 w-full" placeholder="$" oninput="updatePriceFromNet(this)">
                             </div>
                         </div>
 
                         <!-- Price Reference Bar -->
                         <div class="price-ref-bar text-xs text-gray-500 mb-4 h-4 flex items-center justify-between px-1">
                             <!-- JS Injected Info -->
-                            <span>請選擇區域以查看價格參考</span>
+                            <span>請選擇區域以查看售價參考</span>
                         </div>
 
                         <!-- Row 2: Row/Seat -->
@@ -1290,6 +1323,13 @@
 
             }, 800);
         }
+
+        // Initial Render
+        window.addEventListener('DOMContentLoaded', () => {
+            // If we have events, select first one? Or just show all tickets
+            renderTicketList();
+        });
+
     </script>
 </body>
 

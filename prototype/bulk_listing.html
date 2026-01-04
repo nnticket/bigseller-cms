@@ -603,9 +603,9 @@
                                 <div>
                                     <!-- ROI / Pricing -->
                                     <div class="field-group">
-                                        <div class="field-group-title">價格參考 (Pricing Reference)</div>
+                                        <div class="field-group-title">售價參考 (Price Reference)</div>
                                         <div class="text-sm text-gray-400 mb-2">
-                                            請在左側針對每一組座位設定價格。下方為當前區域的市場行情參考。
+                                            請在左側針對每一組座位設定售價。下方為當前區域的市場行情參考。
                                         </div>
                                     </div>
 
@@ -795,8 +795,9 @@
                                 </select>
                             </div>
                             <div>
-                               <label class="block text-xs text-green-400 mb-1">單價 (Price)</label>
-                                <input type="number" class="classic-input price-inp h-10 py-1 text-green-400 font-bold bg-gray-900" placeholder="$">
+                               <label class="block text-xs text-green-400 mb-1">售價 (Selling Price)</label>
+                                <input type="number" class="classic-input price-inp h-10 py-1 text-green-400 font-bold bg-gray-900" placeholder="$" oninput="updateNetIncome(this)">
+                                <div class="text-[10px] text-gray-400 mt-1 net-income-display">實收: $0 (90%)</div>
                             </div>
                         </div>
 
@@ -888,6 +889,15 @@
             if (!isConsecutive && val.includes(',')) {
                 const count = val.split(',').filter(x => x.trim()).length;
                 if (count > 0) qtyInp.value = count;
+            }
+        }
+
+        function updateNetIncome(inputEl) {
+            const price = parseInt(inputEl.value) || 0;
+            const net = Math.floor(price * 0.9);
+            const display = inputEl.parentNode.querySelector('.net-income-display');
+            if (display) {
+                display.innerHTML = `實收: <span class="text-white font-bold">$${net}</span> (90%)`;
             }
         }
 
