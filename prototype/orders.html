@@ -275,6 +275,11 @@
                                 <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
                                 <span class="text-sm font-bold text-indigo-300">出貨作業</span>
                             </div>
+                            <select id="provider-${order.id}" class="classic-input text-sm py-1 px-3 w-32 bg-gray-800 border-gray-600 mr-2">
+                                <option value="黑貓宅急便">黑貓宅急便</option>
+                                <option value="順豐速運">順豐速運</option>
+                                <option value="Lalamove">Lalamove</option>
+                            </select>
                             <input type="text" id="track-${order.id}" class="classic-input text-sm py-1 px-3 w-48 bg-gray-800 border-gray-600" placeholder="輸入物流單號...">
                             <button onclick="shipOrder('${order.id}')" class="btn-primary py-1 px-4 text-sm whitespace-nowrap">確認出貨</button>
                         </div>
@@ -283,6 +288,8 @@
                     actionArea = `
                          <div class="mt-4 p-3 bg-gray-800/50 rounded border border-gray-700 flex justify-between items-center">
                             <div class="text-sm">
+                                <span class="text-gray-500 mr-2">物流方式</span>
+                                <span class="font-bold text-indigo-300 mr-4">${order.logistic_provider || '一般物流'}</span>
                                 <span class="text-gray-500 mr-2">物流單號</span>
                                 <span class="font-mono text-white font-bold tracking-wider">${order.tracking_number || 'N/A'}</span>
                             </div>
@@ -397,17 +404,21 @@
         }
 
         function shipOrder(orderId) {
+            const providerSelect = document.getElementById(`provider-${orderId}`);
+            const provider = providerSelect.value;
             const input = document.getElementById(`track-${orderId}`);
             const trackingNum = input.value.trim();
+
             if (!trackingNum) {
                 alert('請輸入物流單號！');
                 return;
             }
 
-            if (confirm(`確認使用物流單號 [${trackingNum}] 進行出貨？`)) {
+            if (confirm(`確認使用 [${provider}] 物流單號 [${trackingNum}] 進行出貨？`)) {
                 window.db.updateOrder(orderId, {
                     shipping_status: 'shipped',
-                    tracking_number: trackingNum
+                    tracking_number: trackingNum,
+                    logistic_provider: provider
                 });
                 alert('出貨成功！');
                 renderOrderTable();
