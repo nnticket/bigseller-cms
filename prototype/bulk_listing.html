@@ -928,15 +928,12 @@
 
             setTimeout(() => {
                 alert(`成功上架 ${entries.length} 筆資料！\n(Successfully listed ${entries.length} items)`);
-                btn.textContent = old;
-                btn.disabled = false;
-
-                // Reset to one empty
-                document.getElementById('seatEntriesContainer').innerHTML = '';
-                addSeatEntry();
+                // Redirect to Ticket Management List
+                window.location.href = 'tickets.html';
             }, 800);
         }
     </script>
 </body>
 
 </html>
+```
