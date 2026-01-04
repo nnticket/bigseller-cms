@@ -24,3 +24,40 @@ const Utils = {
         return Utils.statusMap[statusKey] || { text: statusKey, class: '', color: '#999' };
     }
 };
+
+// Theme Management
+window.toggleTheme = function () {
+    const html = document.documentElement;
+    const isDark = !html.hasAttribute('data-theme');
+
+    if (isDark) {
+        html.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+        updateThemeIcons(true);
+    } else {
+        html.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'dark');
+        updateThemeIcons(false);
+    }
+}
+
+function updateThemeIcons(isLight) {
+    const suns = document.querySelectorAll('#iconSun');
+    const moons = document.querySelectorAll('#iconMoon');
+
+    suns.forEach(el => el.style.display = isLight ? 'none' : 'block');
+    moons.forEach(el => el.style.display = isLight ? 'block' : 'none');
+}
+
+// Auto Init Theme
+(function () {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    updateThemeIcons(isLight);
+});

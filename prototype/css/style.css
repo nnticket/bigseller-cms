@@ -1,16 +1,50 @@
 :root {
+    /* Dark Mode (Default) */
     --bg-dark: #0f172a;
+    --panel-bg: #1e293b;
     --bg-card: rgba(30, 41, 59, 0.7);
+
+    --border-color: #334155;
+    --border: rgba(255, 255, 255, 0.1);
+
     --primary: #6366f1;
+    --primary-hover: #4f46e5;
     --primary-glow: rgba(99, 102, 241, 0.4);
     --accent: #ec4899;
+
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    --border: rgba(255, 255, 255, 0.1);
+    --text-dim: #cbd5e1;
+
     --glass: blur(12px);
     --radius: 16px;
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
+}
+
+html[data-theme="light"] {
+    /* Light Mode - High Contrast */
+    --bg-dark: #f0f4f8;
+    /* Very light cool gray */
+    --panel-bg: #ffffff;
+    /* Pure white */
+    --bg-card: rgba(255, 255, 255, 0.9);
+
+    --border-color: #cbd5e1;
+    /* Slate 300 */
+    --border: rgba(0, 0, 0, 0.15);
+    /* Stronger border opacity */
+
+    --text-main: #0f172a;
+    /* Slate 900 (Nearly Black) */
+    --text-muted: #475569;
+    /* Slate 600 (Darker Gray) */
+    --text-dim: #64748b;
+    /* Slate 500 */
+
+    --primary: #4f46e5;
+    /* Slightly darker primary for light bg */
+    --primary-glow: rgba(79, 70, 229, 0.2);
 }
 
 body {
@@ -19,7 +53,7 @@ body {
     font-family: var(--font-body);
     margin: 0;
     min-height: 100vh;
-    background-image: 
+    background-image:
         radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
         radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%);
 }
@@ -56,7 +90,8 @@ body {
     transition: color 0.2s;
 }
 
-.nav a:hover, .nav a.active {
+.nav a:hover,
+.nav a.active {
     color: var(--text-main);
 }
 
@@ -70,7 +105,9 @@ body {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
     font-family: var(--font-heading);
     margin-top: 0;
 }
@@ -120,7 +157,8 @@ label {
     font-size: 0.9rem;
 }
 
-input, select {
+input,
+select {
     width: 100%;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border);
@@ -132,7 +170,8 @@ input, select {
     box-sizing: border-box;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     outline: none;
     border-color: var(--primary);
 }
@@ -176,7 +215,8 @@ input:focus, select:focus {
     transition: all 0.2s;
 }
 
-.area-btn:hover, .area-btn.selected {
+.area-btn:hover,
+.area-btn.selected {
     border-color: var(--accent);
     background: rgba(236, 72, 153, 0.1);
     color: white;
@@ -184,7 +224,7 @@ input:focus, select:focus {
 
 /* Competitor Widget */
 .competitor-widget {
-    background: linear-gradient(to bottom right, rgba(99, 102, 241, 0.1), rgba(0,0,0,0));
+    background: linear-gradient(to bottom right, rgba(99, 102, 241, 0.1), rgba(0, 0, 0, 0));
     border: 1px solid var(--primary-glow);
 }
 
@@ -213,17 +253,19 @@ input:focus, select:focus {
     margin: 1.5rem 0;
     position: relative;
     height: 8px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
 }
 
 .price-meter-fill {
     position: absolute;
-    left: 20%; /* Min example */
-    right: 20%; /* Max example */
+    left: 20%;
+    /* Min example */
+    right: 20%;
+    /* Max example */
     top: 0;
     bottom: 0;
-    background: linear-gradient(to right, #ef4444, #eab308, #22c55e); 
+    background: linear-gradient(to right, #ef4444, #eab308, #22c55e);
     border-radius: 4px;
     opacity: 0.5;
 }
@@ -265,7 +307,7 @@ input:focus, select:focus {
 
 .orders-table td {
     padding: 1rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .status-badge {
@@ -276,13 +318,21 @@ input:focus, select:focus {
     font-weight: 600;
 }
 
-.status-paid { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-.status-shipping { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.status-paid {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+.status-shipping {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
 
 .item-row {
-    background: rgba(0,0,0,0.2);
+    background: rgba(0, 0, 0, 0.2);
     display: none;
 }
+
 .item-row.show {
     display: table-row;
 }
