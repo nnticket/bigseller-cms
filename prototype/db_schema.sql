@@ -28,12 +28,13 @@ CREATE TABLE sellers (
     contact_email VARCHAR(100) COMMENT '聯絡人Email',
     contact_phone VARCHAR(20) COMMENT '聯絡電話',
     
-    -- Payment Info (from settings.html)
-    bank_code VARCHAR(20) COMMENT '銀行代碼',
+    -- Payment Info (Global Format)
     bank_name VARCHAR(100) COMMENT '銀行名稱',
-    bank_branch_name VARCHAR(100) COMMENT '分行名稱',
-    bank_account_name VARCHAR(100) COMMENT '戶名',
-    bank_account_number VARCHAR(50) COMMENT '銀行帳號',
+    swift_code VARCHAR(20) COMMENT 'SWIFT/BIC Code',
+    beneficiary_name VARCHAR(100) COMMENT '受益人姓名 (Beneficiary Name)',
+    bank_account_number VARCHAR(50) COMMENT '銀行帳號 / IBAN',
+    bank_address VARCHAR(255) COMMENT '銀行地址',
+    bank_country VARCHAR(50) DEFAULT 'Taiwan' COMMENT '銀行所在國家',
     
     percent DECIMAL(5, 2) DEFAULT 0.00 COMMENT '平台抽成百分比',
     balance DECIMAL(15, 2) DEFAULT 0.00 COMMENT '錢包餘額',
