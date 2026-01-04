@@ -198,31 +198,56 @@
             <p class="text-gray-400 text-sm mb-6">請填寫您接收款項的銀行帳戶資訊。我們會定期將銷售收益匯入此帳戶。</p>
 
             <form id="paymentForm" onsubmit="savePaymentInfo(event)" class="space-y-4">
+
+                <div class="input-group">
+                    <label>受益人姓名 (Beneficiary Name)</label>
+                    <input type="text" id="accountName" class="bg-input" placeholder="Full Legal Name"
+                        value="Taiwan Ticket Master Co., Ltd.">
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div class="input-group">
-                        <label>銀行代碼 (Bank Code)</label>
-                        <input type="text" id="bankCode" class="bg-input" placeholder="例如: 822" value="822">
+                        <label>銀行名稱 (Bank Name)</label>
+                        <input type="text" id="bankName" class="bg-input" value="CTBC Bank">
                     </div>
                     <div class="input-group">
-                        <label>銀行名稱 (Bank Name)</label>
-                        <input type="text" id="bankName" class="bg-input" placeholder="例如: 中國信託" value="中國信託商業銀行">
+                        <label>SWIFT / BIC Code</label>
+                        <input type="text" id="swiftCode" class="bg-input font-mono" placeholder="Ex: CTBCTWTP"
+                            value="CTBCTWTP">
                     </div>
                 </div>
 
                 <div class="input-group">
-                    <label>分行名稱 (Branch Name)</label>
-                    <input type="text" id="branchName" class="bg-input" placeholder="例如: 營業部" value="城東分行">
+                    <label>銀行帳號 / IBAN (Account Number)</label>
+                    <input type="text" id="accountNumber" class="bg-input font-mono"
+                        placeholder="Account Number or IBAN" value="822123456789012">
                 </div>
 
                 <div class="input-group">
-                    <label>戶名 (Account Name)</label>
-                    <input type="text" id="accountName" class="bg-input" placeholder="需與銀行帳戶一致" value="台灣票務大王有限公司">
+                    <label>銀行地址 (Bank Address)</label>
+                    <input type="text" id="bankAddress" class="bg-input" placeholder="Bank Branch Address"
+                        value="No. 168, Jingmao 2nd Rd, Nangang Dist, Taipei City">
                 </div>
 
                 <div class="input-group">
-                    <label>銀行帳號 (Account Number)</label>
-                    <input type="text" id="accountNumber" class="bg-input font-mono" placeholder="請輸入帳號"
-                        value="1234-5678-9012">
+                    <label>國家/地區 (Country/Region)</label>
+                    <div class="relative">
+                        <select class="bg-input appearance-none cursor-pointer">
+                            <option>Taiwan (ROC)</option>
+                            <option>United States</option>
+                            <option>Japan</option>
+                            <option>Hong Kong</option>
+                            <option>Singapore</option>
+                            <option>United Kingdom</option>
+                        </select>
+                        <div
+                            class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="pt-4">
