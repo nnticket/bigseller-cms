@@ -96,6 +96,10 @@
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
+            height: 100%;
+            /* Fix: Enforce height */
+            overflow: hidden;
+            /* Fix: Enforce containment */
         }
 
         .search-area {
@@ -126,6 +130,8 @@
             min-height: 0;
             overflow-y: auto;
             padding: 0.5rem;
+            padding-bottom: 80px;
+            /* Fix: Extra space for scroll reach */
         }
 
         /* Tree Items */
